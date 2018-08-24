@@ -1,10 +1,17 @@
 import numpy as np
-from numpy.polynomial.polynomial import polyval
+
 import matplotlib.pyplot as plt
 
 
 def plot(f = 1 , x = [0,1,2,3], scatter = False):
-
+    """
+    Adds the results to the plot. does not show the plot
+    Use plt.show() in main function for that
+    :param f: function to plot
+    :param x: x interval or point to plot
+    :param scatter: True when plotting local max/min
+    :return:
+    """
 
     if scatter == True:
         plt.scatter(x, f(x))
@@ -12,11 +19,10 @@ def plot(f = 1 , x = [0,1,2,3], scatter = False):
         plt.plot(x, f(x))
 
 
-    ## Config the graph
-    plt.title('A Cool Graph')
+    # Config the graph
+    plt.title('Optimize methods')
     plt.xlabel('X')
     plt.ylabel('Y')
-    # plt.ylim([0, 50])
     plt.grid(True)
     plt.legend(['f(x) = -x^4 + 2x^3 + 2x^2 - x',
                 "f'(x) = -4x^3 + 6x^2 + 4x - 1"], loc='upper left')
@@ -26,8 +32,8 @@ def plot(f = 1 , x = [0,1,2,3], scatter = False):
 def gradient_ascent(f_derv, start_point = 3, descent_or_ascent="ascent"):
     """
     Function performs gradient ascent/descent for
-    given function derivative with a
-    start point. Returns the local maximum
+    given function derivative with a start point.
+    Returns the local maximum
     :param f_derv: Derivative of function
     :param start_point: Starting point for search
     :return: local maximum
@@ -48,9 +54,8 @@ def gradient_ascent(f_derv, start_point = 3, descent_or_ascent="ascent"):
             cur_x = cur_x + rate * f_derv(prev_x)  # Grad descent
         previous_step_size = abs(cur_x - prev_x)  # Change in x
         iters = iters + 1  # iteration count
-        print("Iteration", iters, "\nX value is", cur_x)  # Print iterations
 
-    print("The local minimum occurs at", cur_x)
+
     return cur_x
 
 
@@ -83,10 +88,19 @@ def main():
     plot(f, x)
     plot(f_derv, x)
 
-    # Plot gradient ascent and exhaustive search.
-    max_grad = gradient_ascent(f_derv, start_point=0.1,
-                               descent_or_ascent="decent")
-    plot(f, max_grad, scatter=True)
+    # Gradient ascent with extra exploration
+    number_of_exploration = 10
+    max_value = f(-2)
+    for step in x[::int(len(x)/number_of_exploration)]:
+        new_value = gradient_ascent(f_derv, start_point=step,
+                                   descent_or_ascent="ascent")
+        if f(new_value) > f(max_value):
+            max_value = new_value
+
+    print("The local maxima/minima occurs at {}".format(max_value))
+    plot(f, max_value, scatter=True)
+
+    # Exhaustive search
     max_exhaust = exhaustive_search(f)
     plot(f, max_exhaust, scatter=True)
     plt.show()
