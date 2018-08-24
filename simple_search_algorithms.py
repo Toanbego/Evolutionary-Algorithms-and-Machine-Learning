@@ -7,9 +7,9 @@ def plot(f = 1 , x = [0,1,2,3], scatter = False):
 
 
     if scatter == True:
-        plt.scatter(exhaustive_search(f), f(exhaustive_search(f)))
+        plt.scatter(x, f(x))
     elif scatter == False:
-        plt.plot(f, x)
+        plt.plot(x, f(x))
 
 
     ## Config the graph
@@ -23,7 +23,7 @@ def plot(f = 1 , x = [0,1,2,3], scatter = False):
 
 
 
-def gradient_ascent(f_derv, start_point = 3):
+def gradient_ascent(f_derv, start_point = 3, descent_or_ascent="ascent"):
     """
     Function performs gradient ascent/descent for
     given function derivative with a
@@ -42,7 +42,10 @@ def gradient_ascent(f_derv, start_point = 3):
 
     while previous_step_size > precision and iters < max_iters:
         prev_x = cur_x  # Store current x value in prev_x
-        cur_x = cur_x + rate * f_derv(prev_x)  # Grad ascent
+        if descent_or_ascent == "descent":
+            cur_x = cur_x - rate * f_derv(prev_x)  # Grad descent
+        if descent_or_ascent == "ascent":
+            cur_x = cur_x + rate * f_derv(prev_x)  # Grad descent
         previous_step_size = abs(cur_x - prev_x)  # Change in x
         iters = iters + 1  # iteration count
         print("Iteration", iters, "\nX value is", cur_x)  # Print iterations
@@ -71,21 +74,21 @@ def exhaustive_search(f):
 
 def main():
 
-    #Function
+    # Functions and interval
     f = lambda x: -x**4 + 2*x**3 + 2*x**2 - x
-
-    # Parameters for gradient decent
+    f_derv = lambda x: -4 * x ** 3 + 6 * x ** 2 + 4 * x - 1
     x = np.linspace(-2, 3)
-    f_derv = lambda x: -4*x**3 + 6*x**2 + 4*x - 1
 
-   #TODO fix plotting function
-    max_grad = gradient_ascent(f_derv)
+    # Plot the function and its derivative
     plot(f, x)
+    plot(f_derv, x)
 
+    # Plot gradient ascent and exhaustive search.
+    max_grad = gradient_ascent(f_derv, start_point=0.1,
+                               descent_or_ascent="decent")
+    plot(f, max_grad, scatter=True)
     max_exhaust = exhaustive_search(f)
-    plot(f, x)
-
-
+    plot(f, max_exhaust, scatter=True)
     plt.show()
 
 
