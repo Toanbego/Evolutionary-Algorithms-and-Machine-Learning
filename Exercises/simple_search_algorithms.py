@@ -52,7 +52,7 @@ def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
     Returns the local maximum
     :param f_derv: Derivative of function
     :param start_point: Starting point for search
-    :return: local maximum
+    :return: local maximum/minimum
     """
 
     # Initialize parameters
@@ -63,10 +63,7 @@ def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
     max_iters = 10000  # maximum number of iterations
     iters = 0  # iteration counter
 
-    # Gradient ascent with extra exploration
-
-
-
+    # Perform gradient search
     while previous_step_size > precision and iters < max_iters:
         prev_x = cur_x  # Store current x value in prev_x
         if descent_or_ascent == "descent":
@@ -82,11 +79,11 @@ def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
 
 def exhaustive_search(f):
     """
-    Function that searches every possible solution and returns the best one
+    Function that searches every possible solution and returns global maximum
     :param f: Function
     :return: Returns y and x value
     """
-    step = 0.5
+    step = 0.001
     x = np.arange(-2, 3+step, step)
     max_value = f(3)
     for step in x:
