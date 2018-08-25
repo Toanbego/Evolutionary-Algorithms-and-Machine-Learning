@@ -1,6 +1,21 @@
 import numpy as np
-
 import matplotlib.pyplot as plt
+import argparse
+
+
+def parse_arguments():
+    """
+    Parse command line arguments
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--method', '-m', type=str,
+                        help='Pick either gradient_search or exhaustive_search')
+
+    # For gradient
+    parser.add_argument('--gradient_method', '-g', type=str, help='Pick either ascent or descent', default='ascent')
+    parser.add_argument('--exploration', '-e', type=int, help='Number of explorations', default=0)
+    parser.add_argument('--start_point', '-s', type=float, help='Start point of gradient search', default=3)
+    return parser.parse_args()
 
 
 def plot(f = 1 , x = [0,1,2,3], scatter = False):
@@ -29,7 +44,8 @@ def plot(f = 1 , x = [0,1,2,3], scatter = False):
 
 
 
-def gradient_ascent(f_derv, start_point = 3, descent_or_ascent="ascent"):
+def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
+
     """
     Function performs gradient ascent/descent for
     given function derivative with a start point.
@@ -38,12 +54,17 @@ def gradient_ascent(f_derv, start_point = 3, descent_or_ascent="ascent"):
     :param start_point: Starting point for search
     :return: local maximum
     """
+
+    # Initialize parameters
     cur_x = start_point  # The algorithm starts at x=3
     rate = 0.01  # Learning rate
     precision = 0.000001  # This tells us when to stop the algorithm
     previous_step_size = 1  #
     max_iters = 10000  # maximum number of iterations
     iters = 0  # iteration counter
+
+    # Gradient ascent with extra exploration
+
 
 
     while previous_step_size > precision and iters < max_iters:
@@ -78,6 +99,8 @@ def exhaustive_search(f):
 
 
 def main():
+    # Parse arguments
+    args = parse_arguments()
 
     # Functions and interval
     f = lambda x: -x**4 + 2*x**3 + 2*x**2 - x
@@ -88,21 +111,31 @@ def main():
     plot(f, x)
     plot(f_derv, x)
 
-    # Gradient ascent with extra exploration
-    number_of_exploration = 10
-    max_value = f(-2)
-    for step in x[::int(len(x)/number_of_exploration)]:
-        new_value = gradient_ascent(f_derv, start_point=step,
-                                   descent_or_ascent="ascent")
-        if f(new_value) > f(max_value):
-            max_value = new_value
+    # Pick method to use
+    if args.method == 'exhaustive_search':
+        local_max_min = exhaustive_search(f)
 
-    print("The local maxima/minima occurs at {}".format(max_value))
-    plot(f, max_value, scatter=True)
+    elif args.method == 'gradient_search':
 
-    # Exhaustive search
-    max_exhaust = exhaustive_search(f)
-    plot(f, max_exhaust, scatter=True)
+        # Use exploration
+        if args.exploration > 0:
+            local_max_min = f(-2)
+            for step in x[::int(len(x) / args.exploration)]:
+                print("Exploring from: {}".format(step))
+                new_value = gradient_search(f_derv, start_point=step,
+                                            descent_or_ascent="ascent")
+                if f(new_value) > f(local_max_min):
+                    local_max_min = new_value
+
+        # Do not use exploration, but chosen start point
+        else:
+            local_max_min = gradient_search(f_derv, args.start_point, args.gradient_method)
+    # Raise an error if not valid method is chosen
+    else:
+        raise ValueError("Pick either gradient_search or exhaustive_search")
+
+    # Plot the local max/min with the function
+    plot(f, local_max_min, scatter=True)
     plt.show()
 
 
