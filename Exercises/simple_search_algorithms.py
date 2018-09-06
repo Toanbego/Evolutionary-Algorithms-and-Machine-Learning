@@ -1,3 +1,10 @@
+"""
+Author - Torstein Gombos
+Created - 06.09.2018
+
+Module with some simple search algorithms that can be used for optimization.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -18,7 +25,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def plot(f = 1 , x = [0,1,2,3], scatter = False):
+def plot(f=1, x=[0,1,2,3], scatter=False):
     """
     Adds the results to the plot. does not show the plot
     Use plt.show() in main function for that
@@ -32,7 +39,6 @@ def plot(f = 1 , x = [0,1,2,3], scatter = False):
         plt.scatter(x, f(x))
     elif scatter == False:
         plt.plot(x, f(x))
-
 
     # Config the graph
     plt.title('Optimize methods')
@@ -77,7 +83,7 @@ def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
     return cur_x
 
 
-def exhaustive_search(data, search_space):
+def exhaustive_search(f, data, search_space):
     """
     Function that searches every possible solution and returns global minimum
     :param f: Function
@@ -85,9 +91,9 @@ def exhaustive_search(data, search_space):
     """
     step = 0.001
     # Arbitrary start value
-    max_value = get_total_distance(data, search_space[0])
+    max_value = f(data, search_space[0])
     for step in search_space:
-        new_value = get_total_distance(data, step)
+        new_value = f(data, step)
         if new_value < max_value:
             max_value = new_value
             x_value = step

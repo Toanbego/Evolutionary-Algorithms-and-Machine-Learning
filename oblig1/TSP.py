@@ -5,12 +5,10 @@ Solving the travelling salesman problem
 """
 import time
 import csv
-import itertools
 import random
-from oblig1 import routes as r
-# from Exercises import simple_search_algorithms as search
-# TODO Implement exhaustive search from previous assignment
 
+from oblig1 import routes as r
+from oblig1 import simple_search_algorithms as search
 
 def read_CSV(file) -> list:
     """
@@ -21,21 +19,6 @@ def read_CSV(file) -> list:
     with open(file, "r") as f:
         data = list(csv.reader(f, delimiter=';'))
     return data
-
-def exhaustive_search(data, search_space):
-    """
-    Function that searches every possible solution and returns global minimum
-    :param f: Function
-    :return: Returns y and x value
-    """
-    # Arbitrary start value
-    max_value = r.get_total_distance(data, search_space[0])
-    for step in search_space:
-        new_value = r.get_total_distance(data, step)
-        if new_value < max_value:
-            max_value = new_value
-            x_value = step
-    return max_value, x_value
 
 def get_result(data, route_idx, travel_distance, algorithm):
     """
@@ -50,7 +33,6 @@ def get_result(data, route_idx, travel_distance, algorithm):
     print("The shortest route using {}:".format(algorithm))
     for city in route_idx:
         print(data[0][city], end=" ")
-        # route.append(data[0][city])
     print("\nThe total distance is {}km".format(travel_distance))
 
 def hill_climber(data):
@@ -80,17 +62,14 @@ def main():
     data = read_CSV(file)
 
     # Define routes
-    # route = r.create_random_route(route_length=6)
-    # routes = r.create_permutation_of_routes(route_length=6)
+    routes = r.create_permutation_of_routes(route_length=10)
 
     # Use optimization algorithm
-    # travel_distance, route_idx = exhaustive_search(data, routes)
-    hill_climber(data)
+    travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes)
+    # search.hill_climber(data)
 
     # Print result
-    # get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
-
-
+    get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
 
 
 # Time the function
