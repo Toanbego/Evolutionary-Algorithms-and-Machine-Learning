@@ -35,26 +35,6 @@ def get_result(data, route_idx, travel_distance, algorithm):
         print(data[0][city], end=" ")
     print("\nThe total distance is {}km".format(travel_distance))
 
-def hill_climber(data):
-    """
-    Hill climber algorithm that will check a neighboring solution
-    If the neighbor solution is better, this becomes the new solution
-    if not, keep the old one.
-    :param data:
-    :param search_space:
-    :return:
-    """
-    # Set up a route
-    route = r.create_route()
-    precision = 0.01
-
-    # Scramble route for randomness
-    solution = random.sample(route, 24)
-
-    while solution < precision:
-        r.get_total_distance(data, solution)
-
-
 
 def main():
     # Read file and fetch data from csv file
