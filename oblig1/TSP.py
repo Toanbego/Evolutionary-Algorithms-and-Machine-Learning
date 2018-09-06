@@ -7,8 +7,8 @@ import time
 import csv
 import itertools
 import random
-from Exercises import simple_search_algorithms as search
-exhaustive_search = search.exhaustive_search()
+from oblig1 import routes as r
+# from Exercises import simple_search_algorithms as search
 # TODO Implement exhaustive search from previous assignment
 
 
@@ -22,75 +22,79 @@ def read_CSV(file) -> list:
         data = list(csv.reader(f, delimiter=';'))
     return data
 
-def get_distance_cities(data, city1="Copenhagen", city2="Dublin") -> float:
+def exhaustive_search(data, search_space):
     """
-    Calculates the distance between two cities from a CSV file
-    :param data: The dataset with city names and distance
-    :param city1: First city
-    :param city2: Second city
-    :return: Distance
+    Function that searches every possible solution and returns global minimum
+    :param f: Function
+    :return: Returns y and x value
     """
-    idx1, idx2 = data[0].index(city1), data[0].index(city2)
-    dist_idx = abs(idx1 - idx2)
-    return float(data[min(idx1, idx2)+1][min(idx1, idx2)+dist_idx])
+    # Arbitrary start value
+    max_value = r.get_total_distance(data, search_space[0])
+    for step in search_space:
+        new_value = r.get_total_distance(data, step)
+        if new_value < max_value:
+            max_value = new_value
+            x_value = step
+    return max_value, x_value
 
-def create_permutation_of_routes(data, route_length=6):
+def get_result(data, route_idx, travel_distance, algorithm):
     """
-    Create permutation of routes given length
+    Prints result from algorithm
+    :param data: Data from CSV
+    :param route_idx: The route. Should be index numbers
+    :param travel_distance: The total distance of route
+    :param algorithm: What algorithm was used
+    :return: None
+    """
+    route = []
+    print("The shortest route using {}:".format(algorithm))
+    for city in route_idx:
+        print(data[0][city], end=" ")
+        # route.append(data[0][city])
+    print("\nThe total distance is {}km".format(travel_distance))
+
+def hill_climber(data):
+    """
+    Hill climber algorithm that will check a neighboring solution
+    If the neighbor solution is better, this becomes the new solution
+    if not, keep the old one.
     :param data:
-    :param route_length:
+    :param search_space:
     :return:
     """
-    route_sequence = list(range(route_length))
-    all_routes = list(itertools.permutations(route_sequence))
-    return all_routes
+    # Set up a route
+    route = r.create_route()
+    precision = 0.01
+
+    # Scramble route for randomness
+    solution = random.sample(route, 24)
+
+    while solution < precision:
+        r.get_total_distance(data, solution)
 
 
-def create_random_route(route_length = 10):
-    """
-    Returns a random sequence that can be used to access different indexes
-    in the data variable from the CSV file.
-    :param route_length: Length of sequence
-    :return:
-    """
-    # Generate a random route sequence
-    random.seed()
-    random_route = list(range(route_length))
-    random_route = random.sample(range(24), 6)
-    return random_route
-
-def get_total_distance(data, route):
-    """
-    Recieve total distance from the selected route
-    :param data: List of data
-    :param route: Selected route
-    :return: Total route distance
-    """
-    total_dist = 0
-    for step, travel in enumerate(route):
-        try:
-            dist = get_distance_cities(data, data[0][travel], data[0][route[step + 1]])
-            total_dist += dist
-        except IndexError:
-            break
-        print("distance from {} to {} is: {}".format(data[0][travel],
-                                                     data[0][route[step + 1]], dist))
-    print("Total route distance: ", total_dist)
-    return round(total_dist, 2)
 
 def main():
     # Read file and fetch data from csv file
     file = "european_cities.csv"
     data = read_CSV(file)
 
-    route = create_random_route(route_length=6)
-    routes = create_permutation_of_routes(data, route_length=6)
+    # Define routes
+    # route = r.create_random_route(route_length=6)
+    # routes = r.create_permutation_of_routes(route_length=6)
 
-    exhaustive_search(get_total_distance(), routes)
-    total_distance = get_total_distance(data, route)
+    # Use optimization algorithm
+    # travel_distance, route_idx = exhaustive_search(data, routes)
+    hill_climber(data)
+
+    # Print result
+    # get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
 
 
+
+
+# Time the function
 t0 = time.time()
 main()
 t1 = time.time()
-print("Code execution: ", t1-t0)
+print("\nCode execution: {}s".format(t1-t0))

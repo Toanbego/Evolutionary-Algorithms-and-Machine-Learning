@@ -77,22 +77,21 @@ def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
     return cur_x
 
 
-def exhaustive_search(f):
+def exhaustive_search(data, search_space):
     """
-    Function that searches every possible solution and returns global maximum
+    Function that searches every possible solution and returns global minimum
     :param f: Function
     :return: Returns y and x value
     """
     step = 0.001
-    x = np.arange(-2, 3+step, step)
-    max_value = f(3)
-    for step in x:
-        new_value = f(step)
-        if new_value > max_value:
+    # Arbitrary start value
+    max_value = get_total_distance(data, search_space[0])
+    for step in search_space:
+        new_value = get_total_distance(data, step)
+        if new_value < max_value:
             max_value = new_value
             x_value = step
-
-    return x_value
+    return max_value, x_value
 
 
 def main():
@@ -138,4 +137,4 @@ def main():
 
 
 
-main()
+# main()
