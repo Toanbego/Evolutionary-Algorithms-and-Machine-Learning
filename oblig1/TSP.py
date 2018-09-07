@@ -10,6 +10,8 @@ import random
 from oblig1 import routes as r
 from oblig1 import simple_search_algorithms as search
 
+# TODO Make mutations and crossovers a class
+
 def read_CSV(file) -> list:
     """
     Reads the content of a CSV file and store it to a data variable
@@ -42,13 +44,14 @@ def main():
     data = read_CSV(file)
 
     # Define routes
-    routes = r.create_permutation_of_routes(route_length=10)
+    route_length = 6
+    routes = r.create_permutation_of_routes(data, route_length)
 
     # Use optimization algorithm
-    travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes)
-    # search.hill_climber(data)
-
-    # Print result
+    travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes, route_length)
+    # # search.hill_climber(data)
+    #
+    # # Print result
     get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
 
 

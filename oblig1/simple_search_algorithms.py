@@ -3,14 +3,15 @@ Author - Torstein Gombos
 Created - 06.09.2018
 
 Module with some simple search algorithms that can be used for optimization.
-These algorithms are generalized to fit more than one problem.
 """
 import random
 
 from oblig1 import routes as r
 
-def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
 
+
+
+def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
     """
     Function performs gradient ascent/descent for
     given function derivative with a start point.
@@ -39,8 +40,8 @@ def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
         previous_step_size = abs(cur_x - prev_x)  # Change in x
         iters = iters + 1  # iteration count
 
-
     return cur_x
+
 
 def one_swap_crossover(ind):
     """
@@ -54,6 +55,7 @@ def one_swap_crossover(ind):
     ind[a1], ind[a2] = ind[a2], ind[a1]
     return ind
 
+
 def hill_climber(data):
     """
     Hill climber algorithm that will check a neighboring solution
@@ -63,28 +65,38 @@ def hill_climber(data):
     :param search_space:
     :return:
     """
-    # Set up a route with 24 cities
-    route = r.create_random_route()
-    precision = 0.01
-    one_swap_crossover(route)
-    # solution =
-    #
-    while solution > precision:
-        r.get_total_distance(data, solution)
+    route = r.create_random_route()  # Set up a route with 24 cities
+    fitness = r.get_total_distance(data, route)  # Initiate start solution
+    evaluation = 1
 
-def exhaustive_search(f, data, search_space):
+    while evaluation < fitness:
+        # Start moving
+        new_route = one_swap_crossover(route)
+        updated_fitness = r.get_total_distance(data, new_route)
+
+        # Test if the new move was better than the old
+        if updated_fitness > fitness:  # Check new solution vs. old
+            fitness = updated_fitness  # Update solution
+            remember_route = new_route  # Remember the route
+
+
+
+
+def exhaustive_search(f, data, search_space, route_length):
     """
     Function that searches every possible solution and returns global minimum
     :param f: Function
+    :param data: The data that is needed for some functions
+    :param search_space: Possible solutions
     :return: Returns y and x value
     """
-    step = 0.001
-    # Arbitrary start value
-    max_value = f(data, search_space[0])
+    # Add home travel to each solution in search space
+    step = 0.001  # Used for continuous problems
+    fitness = f(data, search_space[0], route_length)  # Arbitrary start value
+    # Loop through all possible solutions and pick the best one
     for step in search_space:
-        new_value = f(data, step)
-        if new_value < max_value:
-            max_value = new_value
+        new_value = f(data, step, route_length)
+        if new_value < fitness:
+            fitness = new_value
             x_value = step
-    return max_value, x_value
-
+    return fitness, x_value
