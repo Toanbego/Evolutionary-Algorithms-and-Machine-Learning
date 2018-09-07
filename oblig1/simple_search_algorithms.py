@@ -5,7 +5,8 @@ Created - 06.09.2018
 Module with some simple search algorithms that can be used for optimization.
 """
 import random
-
+import sys
+sys.path.append('C:/Users/toanb/Documents/Skole_programmering/INF3331-tagombos/assignment3')
 from oblig1 import routes as r
 
 
@@ -92,10 +93,10 @@ def exhaustive_search(f, data, search_space, route_length):
     """
     # Add home travel to each solution in search space
     step = 0.001  # Used for continuous problems
-    fitness = f(data, search_space[0], route_length)  # Arbitrary start value
+    fitness = f(data, search_space[0])  # Arbitrary start value
     # Loop through all possible solutions and pick the best one
     for step in search_space:
-        new_value = f(data, step, route_length)
+        new_value = f(data, step)
         if new_value < fitness:
             fitness = new_value
             x_value = step

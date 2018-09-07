@@ -44,7 +44,7 @@ def main():
     data = read_CSV(file)
 
     # Define routes
-    route_length = 6
+    route_length = 10
     routes = r.create_permutation_of_routes(data, route_length)
 
     # Use optimization algorithm

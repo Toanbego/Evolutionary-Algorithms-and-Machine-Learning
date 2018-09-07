@@ -32,20 +32,24 @@ def create_permutation_of_routes(data, route_length=6, random_route=False) -> li
     if random_route:
         random_route = random.sample(range(24), route_length)
         all_routes = list(itertools.permutations(random_route))
+        for n, element in enumerate(all_routes.copy()):
+            for i in element:
+                l = list(all_routes[n])
+                l.append(i)
+                all_routes[n] = tuple(l)
+                break
         return all_routes
     else:
         route_starting_point = list(range(route_length))
-        # print(route_starting_point)
-        # for start_city in route_starting_point.copy():
-        #     route_sequence = list(itertools.permutations(route_starting_point))
-        #
-        #     break
-        dist = []
-        comb = list(itertools.permutations(route_starting_point))
-        for element in comb:
+        all_routes = list(itertools.permutations(route_starting_point))
+
+        # Appends home destination to all permutations
+        for n, element in enumerate(all_routes.copy()):
             for i in element:
-                dist.append(float(data[1 + element[i]][element[i - 1]]))
-        print(dist)
+                l = list(all_routes[n])
+                l.append(i)
+                all_routes[n] = tuple(l)
+                break
         return all_routes
 
 def create_random_route(route_length = 10):
@@ -63,7 +67,7 @@ def create_random_route(route_length = 10):
 def create_route(route_length=24):
     return list(range(route_length))
 
-def get_total_distance(data, route, route_length) -> float:
+def get_total_distance(data, route) -> float:
     """
     Sum up the total distance for a route
     :param data: List of data
@@ -72,13 +76,9 @@ def get_total_distance(data, route, route_length) -> float:
     """
     total_dist = 0
     # loop through route
-    new_end_route = route
     for step, travel in enumerate(route):
         try:
-            # if step % 120 == 0:
-            #     print(new_end_route=new_end_route +2)
             dist = get_distance_cities(data, data[0][travel], data[0][route[step + 1]])
-
             total_dist += dist
         # Break off when reaching the end of the index
         except IndexError:
