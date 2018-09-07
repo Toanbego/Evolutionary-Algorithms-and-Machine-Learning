@@ -5,14 +5,14 @@ Solving the travelling salesman problem
 """
 import time
 import csv
-import random
 
 from oblig1 import routes as r
 from oblig1 import simple_search_algorithms as search
 
 # TODO Make mutations and crossovers a class
 
-def read_CSV(file) -> list:
+
+def read_csv(file) -> list:
     """
     Reads the content of a CSV file and store it to a data variable
     :param file: CSV file
@@ -31,7 +31,6 @@ def get_result(data, route_idx, travel_distance, algorithm):
     :param algorithm: What algorithm was used
     :return: None
     """
-    route = []
     print("The shortest route using {}:".format(algorithm))
     for city in route_idx:
         print(data[0][city], end=" ")
@@ -41,36 +40,18 @@ def get_result(data, route_idx, travel_distance, algorithm):
 def main():
     # Read file and fetch data from csv file
     file = "european_cities.csv"
-    data = read_CSV(file)
-
-    # Define routes
-    route_length = 10
-    # routes = r.create_permutation_of_routes(data)
+    data = read_csv(file)
 
     # Use optimization algorithm
-    # travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes, route_length)
+    travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data)
+    # travel_distance, best_route = search.hill_climber(data, route_length=24, num_of_rand_resets=10000)
 
-    # TODO This should happen in the hillclimber function
-    times_improved = 0
-    for explorations in range(10000):
-        searches, travel_distance, route_idx = search.hill_climber(data)
-
-        # Create a start value
-        if explorations == 0:
-            fitness = travel_distance
-            print("Started with {}".format(fitness))
-        if travel_distance < fitness:
-            times_improved +=1
-            fitness = travel_distance
-
-    print("Performed 100000 random searches and found a better solution {} times\n".format(times_improved))
-    travel_distance = fitness
     # Print result
-    get_result(data, route_idx, travel_distance, algorithm="hill climb")
-    # get_result(data, route_idx, travel_distance, algorithm="hill climb")
+    # get_result(data, best_route, travel_distance, algorithm="hill climb")
+    get_result(data, best_route, travel_distance, algorithm="exhaustive search")
 
 
-# Time the function
+# Time the execution
 t0 = time.time()
 main()
 t1 = time.time()

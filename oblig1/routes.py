@@ -4,9 +4,11 @@ Created - 06.09.2018
 
 Package with functions regarding routes and distance for routes
 """
-
+import sys, os
+sys.path.append('C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1')
 import random
 import itertools
+
 
 def get_distance_cities(data, city1, city2) -> float:
     """
@@ -61,12 +63,13 @@ def create_random_route(route_length = 10):
     """
     # Generate a random route sequence
     random.seed()
-    random_route = random.sample(range(24), 24)
+    random_route = random.sample(range(route_length), route_length)
     random_route.append(random_route[0])
     return random_route
 
-def create_route(route_length=24):
-    return list(range(route_length))
+def create_route(route_length=6):
+    route = list(range(route_length))
+    return route
 
 def get_total_distance(data, route) -> float:
     """
