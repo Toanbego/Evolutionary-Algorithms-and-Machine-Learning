@@ -62,6 +62,7 @@ def create_random_route(route_length = 10):
     # Generate a random route sequence
     random.seed()
     random_route = random.sample(range(24), 24)
+    random_route.append(random_route[0])
     return random_route
 
 def create_route(route_length=24):

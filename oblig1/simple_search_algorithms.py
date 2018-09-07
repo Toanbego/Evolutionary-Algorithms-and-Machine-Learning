@@ -50,14 +50,16 @@ def one_swap_crossover(ind):
     :param ind: The individual to perform crossover
     :return: Mutated individual
     """
-    seq_idx = range(len(ind))
     # Sample two random alleles and swap them
-    a1, a2 = random.sample(seq_idx, 2)
+    a1, a2 = random.sample(ind, 2)
+    # Do not swap start and end location. If so, re-sample.
+    if a1 == ind[0] or a1 == ind[-1] or a2 == ind[0] or a2 == ind[-1]:
+        a1, a2 = random.sample(ind, 2)
     ind[a1], ind[a2] = ind[a2], ind[a1]
     return ind
 
 
-def hill_climber(data):
+def hill_climber(data, max_searches=100):
     """
     Hill climber algorithm that will check a neighboring solution
     If the neighbor solution is better, this becomes the new solution
@@ -68,18 +70,27 @@ def hill_climber(data):
     """
     route = r.create_random_route()  # Set up a route with 24 cities
     fitness = r.get_total_distance(data, route)  # Initiate start solution
-    evaluation = 1
+    searches = 1
 
-
-    while evaluation < fitness:
+    while searches < max_searches:
+        move = False
         # Start moving
-        new_route = one_swap_crossover(route)
-        updated_fitness = r.get_total_distance(data, new_route)
+        # for neighbor_route in one_swap_crossover(route):
+        # Check that we have not reached end of search space
+        neighbor_route = one_swap_crossover(route)
+        if searches >= max_searches:
+            break
+        updated_fitness = r.get_total_distance(data, neighbor_route)
+        searches += 1
+        if updated_fitness > fitness:
+            route = neighbor_route
+            fitness = updated_fitness
+            move = True # A move was made and it lives to see another day
 
-        # Test if the new move was better than the old
-        if updated_fitness > fitness:  # Check new solution vs. old
-            fitness = updated_fitness  # Update solution
-            remember_route = new_route  # Remember the route
+        if not move:
+            break  # No move was made
+
+    return searches, fitness, route
 
 
 def exhaustive_search(f, data, search_space):

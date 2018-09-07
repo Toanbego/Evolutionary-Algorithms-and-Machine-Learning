@@ -49,10 +49,25 @@ def main():
 
     # Use optimization algorithm
     # travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes, route_length)
-    search.hill_climber(data)
 
+    # TODO This should happen in the hillclimber function
+    times_improved = 0
+    for explorations in range(10000):
+        searches, travel_distance, route_idx = search.hill_climber(data)
+
+        # Create a start value
+        if explorations == 0:
+            fitness = travel_distance
+            print("Started with {}".format(fitness))
+        if travel_distance < fitness:
+            times_improved +=1
+            fitness = travel_distance
+
+    print("Performed 100000 random searches and found a better solution {} times\n".format(times_improved))
+    travel_distance = fitness
     # Print result
-    # get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
+    get_result(data, route_idx, travel_distance, algorithm="hill climb")
+    # get_result(data, route_idx, travel_distance, algorithm="hill climb")
 
 
 # Time the function
