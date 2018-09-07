@@ -70,6 +70,7 @@ def hill_climber(data):
     fitness = r.get_total_distance(data, route)  # Initiate start solution
     evaluation = 1
 
+
     while evaluation < fitness:
         # Start moving
         new_route = one_swap_crossover(route)
@@ -81,9 +82,7 @@ def hill_climber(data):
             remember_route = new_route  # Remember the route
 
 
-
-
-def exhaustive_search(f, data, search_space, route_length):
+def exhaustive_search(f, data, search_space):
     """
     Function that searches every possible solution and returns global minimum
     :param f: Function
@@ -91,8 +90,6 @@ def exhaustive_search(f, data, search_space, route_length):
     :param search_space: Possible solutions
     :return: Returns y and x value
     """
-    # Add home travel to each solution in search space
-    step = 0.001  # Used for continuous problems
     fitness = f(data, search_space[0])  # Arbitrary start value
     # Loop through all possible solutions and pick the best one
     for step in search_space:

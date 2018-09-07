@@ -45,14 +45,14 @@ def main():
 
     # Define routes
     route_length = 10
-    routes = r.create_permutation_of_routes(data, route_length)
+    # routes = r.create_permutation_of_routes(data)
 
     # Use optimization algorithm
-    travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes, route_length)
-    # # search.hill_climber(data)
-    #
-    # # Print result
-    get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
+    # travel_distance, route_idx = search.exhaustive_search(r.get_total_distance, data, routes, route_length)
+    search.hill_climber(data)
+
+    # Print result
+    # get_result(data, route_idx, travel_distance, algorithm="exhaustive search")
 
 
 # Time the function
