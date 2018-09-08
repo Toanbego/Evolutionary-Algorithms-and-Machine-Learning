@@ -59,14 +59,16 @@ def create_random_route(route_length = 10):
     :param route_length: Length of sequence
     :return:
     """
-    # Generate a random route sequence
+    # Generate a random route sequence starting from Barcelona
     random.seed()
     random_route = random.sample(range(route_length), route_length)
+    # random.shuffle(random_route)
+    # random_route.insert(0, 0)
     random_route.append(random_route[0])  # Add home travel
     return random_route
 
 def create_route(route_length=6):
-    route = list(range(route_length))
+    route = list(range(1, route_length))
     return route
 
 def get_total_distance(data, route) -> float:
@@ -76,13 +78,13 @@ def get_total_distance(data, route) -> float:
     :param route: Selected route
     :return: Total route distance
     """
-    total_dist = 0
+    dist_list = []
     # loop through route
     for step, travel in enumerate(route):
         try:
-            dist = get_distance_cities(data, data[0][travel], data[0][route[step + 1]])
-            total_dist += dist
+            dist_list.append(get_distance_cities(data, data[0][travel], data[0][route[step + 1]]))
         # Break off when reaching the end of the index
         except IndexError:
             break
-    return round(total_dist, 2)
+        dist = sum(dist_list)
+    return round(dist, 2)

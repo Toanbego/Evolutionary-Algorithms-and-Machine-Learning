@@ -9,58 +9,42 @@ sys.path.append('C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1')
 import random
 from oblig1 import routes as r
 
-
-
-
-def gradient_search(f_derv, start_point=3, descent_or_ascent="ascent"):
-    """
-    Function performs gradient ascent/descent for
-    given function derivative with a start point.
-    Returns the local maximum
-    :param f_derv: derivative of function
-    :param start_point: Starting point for search
-    :param descent_or_ascent: Find local min or max
-    :return: local min/max
-    """
-
-    # Initialize parameters
-    cur_x = start_point  # The algorithm starts at x=3
-    rate = 0.01  # Learning rate
-    precision = 0.000001  # This tells us when to stop the algorithm
-    previous_step_size = 1  #
-    max_iters = 10000  # maximum number of iterations
-    iters = 0  # iteration counter
-
-    # Perform gradient search
-    while previous_step_size > precision and iters < max_iters:
-        prev_x = cur_x  # Store current x value in prev_x
-        if descent_or_ascent == "descent":
-            cur_x = cur_x - rate * f_derv(prev_x)  # Grad descent
-        if descent_or_ascent == "ascent":
-            cur_x = cur_x + rate * f_derv(prev_x)  # Grad descent
-        previous_step_size = abs(cur_x - prev_x)  # Change in x
-        iters = iters + 1  # iteration count
-
-    return cur_x
-
-
-def one_swap_crossover(ind):
+def one_swap_crossover(route):
     """
     Swaps two random alleles with each other
     :param ind: The individual to perform crossover
     :return: Mutated individual
     """
     # Sample two random alleles and swap them
-    seq_idx = list(range(len(ind)))
-    a1, a2 = random.sample(seq_idx, 2)
-    # Do not swap start and end location. If so, re-sample.
-    while a1 == seq_idx[0] or a1 == seq_idx[-1] or a2 == seq_idx[0] or a2 == seq_idx[-1]:
-        a1, a2 = random.sample(seq_idx, 2)
-    ind[a1], ind[a2] = ind[a2], ind[a1]
-    return ind
+    for swap in range(1000):
+        seq_idx = list(range(len(route)))
+        a1, a2 = random.sample(seq_idx[1:-1], 2)
+        copy = route[:]
+        copy[a1], copy[a2] = copy[a2], copy[a1]
+        yield copy
 
+def one_swap_crossover_system(route):
+    """
+    Generates a sequence of random swaps
+    :param ind: The individual to perform crossover
+    :return: Mutated individual
+    """
+    # Create a random index swap
+    ind1 = list(range(1, len(route)-1))
+    ind2 = list(range(1, len(route)-1))
+    random.shuffle(ind1)
+    random.shuffle(ind2)
+    # Loop through cities and swap
+    for city1 in ind1:
+        for city2 in ind2:
+            copy = route[:]
+            c1 = copy[city1]
+            c2 = copy[city2]
+            copy[city1], copy[city2] = copy[city2], copy[city1]
+            assert copy[0] == copy[-1], "start and home is not the same"
+            yield copy
 
-def hill_climber(data, route_length=24, num_of_rand_resets=10000):
+def hill_climber(data, route_length=24, num_of_rand_resets=100):
     """
     Hill climber algorithm that will check a neighboring solution
     If the neighbor solution is better, this becomes the new solution
@@ -69,61 +53,42 @@ def hill_climber(data, route_length=24, num_of_rand_resets=10000):
     :param max_searches
     :return:
     """
-    print("Performing hill climber search for solving the travelling salesman problem:\n"
-          "===========================================================================")
-    times_improved = 0
-    for explorations in range(num_of_rand_resets):
-        # Set up random route
-        route = r.create_random_route(route_length)  # Set up a route with 24 cities
-        travel_distance = r.get_total_distance(data, route)  # Initiate start solution
-        searches = 1
-        max_searches = 100
-        # Begin climbing
-        while searches < max_searches:
-            move = False
-            # Start moving
-            neighbor_route = one_swap_crossover(route)
-            # Check that we have not reached end of search space
-            if searches >= max_searches:
+    # Set up random route
+    route = r.create_random_route(route_length)  # Set up a route with 24 cities
+    travel_distance = r.get_total_distance(data, route)  # Initiate start solution
+    # Begin climbing, try out a number of swaps
+    num_evaluations = 1
+    while num_evaluations < 10000:
+        move_made = False
+        for next_route in one_swap_crossover_system(route):
+            if num_evaluations >= 10000:
                 break
-            updated_distance = r.get_total_distance(data, neighbor_route)
-            if updated_distance > travel_distance:
-                searches += 1
-                route = neighbor_route
-                travel_distance = updated_distance
-                move = True  # A move was made and it lives to see another day
+            updated_dist = r.get_total_distance(data, next_route)
+            num_evaluations += 1
+            if updated_dist < travel_distance:
+                route = next_route
+                travel_distance = updated_dist
+                move_made = True
+                break
 
-            if not move:
-                break  # No move was made
+        if not move_made:
+            break
+    print(num_evaluations)
+    return travel_distance, route
 
-        # Create a start value
-        if explorations == 0:
-            fitness = travel_distance
-            print("Started with {}km for the route:".format(fitness))
-            for city in route:
-                print(data[0][city], end=" ")
-        if travel_distance < fitness:
-            times_improved += 1
-            fitness = travel_distance
-            best_route = route
-    print("\nTested with {} random random routes and found a better solution {} times\n".format(num_of_rand_resets, times_improved))
-    return fitness, best_route
-
-
-def exhaustive_search(f, data, route_length=6):
+def exhaustive_search(route_distance, data, route_length=6):
     """
     Function that searches every possible solution and returns global minimum
-    :param f: Function
+    :param route_distance: Function
     :param data: The data that is needed for some functions
     :return: Returns y and x value
     """
     # Setup route permutations
     routes = r.create_permutation_of_routes(route_length)
-    fitness = f(data, routes[0])  # Arbitrary start value
+    fitness = route_distance(data, routes[0])  # Arbitrary start value
     # Loop through all possible solutions and pick the best one
-
     for step in routes:
-        new_value = f(data, step)
+        new_value = route_distance(data, step)
         if new_value < fitness:
             fitness = new_value
             x_value = step
