@@ -22,7 +22,7 @@ def get_distance_cities(data, city1, city2) -> float:
     dist_idx = abs(idx1 - idx2)
     return float(data[min(idx1, idx2)+1][min(idx1, idx2)+dist_idx])
 
-def create_permutation_of_routes(data, route_length=6, random_route=False) -> list:
+def create_permutation_of_routes(route_length=6, random_route=False) -> list:
     """
     Create permutation of a set of cities
     User provides how many cities to be included
@@ -43,15 +43,13 @@ def create_permutation_of_routes(data, route_length=6, random_route=False) -> li
         return all_routes
     else:
         route_starting_point = list(range(route_length))
-        all_routes = list(itertools.permutations(route_starting_point))
-
+        all_routes = list(itertools.permutations(route_starting_point[1:]))
         # Appends home destination to all permutations
         for n, element in enumerate(all_routes.copy()):
-            for i in element:
-                l = list(all_routes[n])
-                l.append(i)
-                all_routes[n] = tuple(l)
-                break
+            l = list(all_routes[n])
+            l.insert(0, 0)
+            l.append(0)
+            all_routes[n] = tuple(l)
         return all_routes
 
 def create_random_route(route_length = 10):
@@ -64,7 +62,7 @@ def create_random_route(route_length = 10):
     # Generate a random route sequence
     random.seed()
     random_route = random.sample(range(route_length), route_length)
-    random_route.append(random_route[0])
+    random_route.append(random_route[0])  # Add home travel
     return random_route
 
 def create_route(route_length=6):

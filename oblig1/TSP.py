@@ -22,6 +22,7 @@ def read_csv(file) -> list:
         data = list(csv.reader(f, delimiter=';'))
     return data
 
+
 def get_result(data, route_idx, travel_distance, algorithm):
     """
     Prints result from algorithm
@@ -31,7 +32,7 @@ def get_result(data, route_idx, travel_distance, algorithm):
     :param algorithm: What algorithm was used
     :return: None
     """
-    print("The shortest route using {}:".format(algorithm))
+    print("The shortest route found using {}:".format(algorithm))
     for city in route_idx:
         print(data[0][city], end=" ")
     print("\nThe total distance is {}km".format(travel_distance))
@@ -43,12 +44,12 @@ def main():
     data = read_csv(file)
 
     # Use optimization algorithm
-    travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data)
-    # travel_distance, best_route = search.hill_climber(data, route_length=24, num_of_rand_resets=10000)
+    # travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data, route_length=10)
+    travel_distance, best_route = search.hill_climber(data, route_length=10, num_of_rand_resets=100000)
 
     # Print result
-    # get_result(data, best_route, travel_distance, algorithm="hill climb")
-    get_result(data, best_route, travel_distance, algorithm="exhaustive search")
+    get_result(data, best_route, travel_distance, algorithm="hill climb")
+    # get_result(data, best_route, travel_distance, algorithm="exhaustive search")
 
 
 # Time the execution

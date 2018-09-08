@@ -69,7 +69,8 @@ def hill_climber(data, route_length=24, num_of_rand_resets=10000):
     :param max_searches
     :return:
     """
-
+    print("Performing hill climber search for solving the travelling salesman problem:\n"
+          "===========================================================================")
     times_improved = 0
     for explorations in range(num_of_rand_resets):
         # Set up random route
@@ -86,8 +87,8 @@ def hill_climber(data, route_length=24, num_of_rand_resets=10000):
             if searches >= max_searches:
                 break
             updated_distance = r.get_total_distance(data, neighbor_route)
-            searches += 1
             if updated_distance > travel_distance:
+                searches += 1
                 route = neighbor_route
                 travel_distance = updated_distance
                 move = True  # A move was made and it lives to see another day
@@ -95,29 +96,32 @@ def hill_climber(data, route_length=24, num_of_rand_resets=10000):
             if not move:
                 break  # No move was made
 
-        # return searches, fitness, route
         # Create a start value
         if explorations == 0:
             fitness = travel_distance
-            print("Started with {}".format(fitness))
+            print("Started with {}km for the route:".format(fitness))
+            for city in route:
+                print(data[0][city], end=" ")
         if travel_distance < fitness:
             times_improved += 1
             fitness = travel_distance
             best_route = route
-    print("Performed 100000 random searches and found a better solution {} times\n".format(times_improved))
+    print("\nTested with {} random random routes and found a better solution {} times\n".format(num_of_rand_resets, times_improved))
     return fitness, best_route
 
-def exhaustive_search(f, data):
+
+def exhaustive_search(f, data, route_length=6):
     """
     Function that searches every possible solution and returns global minimum
     :param f: Function
     :param data: The data that is needed for some functions
-    :param search_space: Possible solutions
     :return: Returns y and x value
     """
-    routes = r.create_permutation_of_routes(data, route_length=6)
+    # Setup route permutations
+    routes = r.create_permutation_of_routes(route_length)
     fitness = f(data, routes[0])  # Arbitrary start value
     # Loop through all possible solutions and pick the best one
+
     for step in routes:
         new_value = f(data, step)
         if new_value < fitness:
