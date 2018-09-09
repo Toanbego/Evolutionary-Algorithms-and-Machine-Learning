@@ -13,22 +13,28 @@ class Population:
     A class representing a populations of solutions and their
     mutations and crossovers over generations
     """
-    def __init__(self, individual):
+    def __init__(self, data,  population):
         """
         Take in a single individual and initiate a start population
         :param individual:
         """
-        self.population = [route for route in r.create_random_route(len(individual))]
-        print(self.population)
+        self.data = data  # TSP matrix
+        self.population = population  # Initialize population
+        self.evaluation = self.evaluate_population()
+        
+
+    def evaluate_population(self):
+        evals = []
+        for population in self.population:
+            evals.append(r.get_total_distance(self.data, population))
+        return evals
+
 
 
 def genetic_algorithm(data, route_length=24, pop_size=10000):
 
     routes = [r.create_random_route(route_length) for route in range(10000)]
-    print(routes)
-    random.shuffle
-    print(len(routes))
-    # routes = Population()
+    routes = Population(data, routes)
 
     return 1, 1
 
