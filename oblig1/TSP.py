@@ -17,10 +17,6 @@ from oblig1 import routes as r
 from oblig1 import simple_search_algorithms as search
 
 
-
-
-# TODO Make mutations and crossovers a class
-
 def parse_arguments():
     """
     Parse command line arguments
@@ -33,10 +29,9 @@ def parse_arguments():
                              ' -m hc    -   Hill climber search')
     parser.add_argument('--route_length', '-r', type=int, default=10,
                         help='Choose length of route.')
-    parser.add_argument('--route_length', '-r', type=int, default=10,
-                        help='Choose length of route.')
 
     return parser.parse_args()
+
 
 def read_csv(file) -> list:
     """
@@ -73,11 +68,11 @@ def get_result(data, route_idx, travel_distances, algorithm):
 
 
         print("The shortest route was {}km:".format(shortest_dist))
-        for city in route_idx[shortest_route]:
-            print(data[0][city], end=" ")
+        for n, city in enumerate(route_idx[shortest_route]):
+            print(data[0][city], "->", end=" ")
         print("\n\nThe longest route was {}km:".format(longest_dist))
         for city in route_idx[longest_route]:
-            print(data[0][city],"->", end=" ")
+            print(data[0][city], "->", end=" ")
         print("\n\nThe mean was: ", mean)
         print("The standard deviation was: ", std)
 
@@ -85,22 +80,28 @@ def get_result(data, route_idx, travel_distances, algorithm):
 
 
 def main():
-    # Read file and fetch data from csv file
+    # Read file and fetch data from csv file and parse arguments
     data = read_csv(file="european_cities.csv")
     args = parse_arguments()
+
+    # Run exhaustive search
     if args.method == "ex":
         travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data, args.route_length)
         get_result(data, best_route, travel_distance, algorithm="exhaustive search")
 
+    # Run hill climber search
     elif args.method == "hc":
         print("Performing hill climber search for solving the travelling salesman problem:\n"
               "===========================================================================")
         travel_distances, best_routes = [], []
-        for x in range(20):
+        for x in range(4):
             travel_distance, best_route = search.hill_climber(data, args.route_length, num_of_rand_resets=1)
             travel_distances.append(travel_distance), best_routes.append(best_route)
 
         get_result(data, best_routes, travel_distances, algorithm="hill climb")
+
+    elif args.method == "ga":
+        travel_distances, best_routes = search.genetic_algorithm(data, args.route_length)
 
 
 

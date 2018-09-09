@@ -4,15 +4,38 @@ Created - 06.09.2018
 
 Module with some simple search algorithms that can be used for optimization.
 """
-import sys, os
-sys.path.append('C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1')
 import random
 from oblig1 import routes as r
+
+
+class Population:
+    """
+    A class representing a populations of solutions and their
+    mutations and crossovers over generations
+    """
+    def __init__(self, individual):
+        """
+        Take in a single individual and initiate a start population
+        :param individual:
+        """
+        self.population = [route for route in r.create_random_route(len(individual))]
+        print(self.population)
+
+
+def genetic_algorithm(data, route_length=24, pop_size=10000):
+
+    routes = [r.create_random_route(route_length) for route in range(10000)]
+    print(routes)
+    random.shuffle
+    print(len(routes))
+    # routes = Population()
+
+    return 1, 1
 
 def one_swap_crossover(route):
     """
     Swaps two random alleles with each other
-    :param ind: The individual to perform crossover
+    :param route: The individual to perform crossover
     :return: Mutated individual
     """
     # Sample two random alleles and swap them
@@ -26,7 +49,7 @@ def one_swap_crossover(route):
 def one_swap_crossover_system(route):
     """
     Generates a sequence of random swaps
-    :param ind: The individual to perform crossover
+    :param route: The individual to perform crossover
     :return: Mutated individual
     """
     # Create a random index swap
@@ -37,12 +60,11 @@ def one_swap_crossover_system(route):
     # Loop through cities and swap
     for city1 in ind1:
         for city2 in ind2:
-            copy = route[:]
-            c1 = copy[city1]
-            c2 = copy[city2]
-            copy[city1], copy[city2] = copy[city2], copy[city1]
-            assert copy[0] == copy[-1], "start and home is not the same"
-            yield copy
+            swapped_route = route[:]
+            swapped_route[city1], swapped_route[city2]\
+                = swapped_route[city2], swapped_route[city1]
+            assert swapped_route[0] == swapped_route[-1], "start and home is not the same"
+            yield swapped_route
 
 def hill_climber(data, route_length=24, num_of_rand_resets=100):
     """
@@ -50,17 +72,16 @@ def hill_climber(data, route_length=24, num_of_rand_resets=100):
     If the neighbor solution is better, this becomes the new solution
     if not, keep the old one.
     :param data:
-    :param max_searches
+    :param route_length:
+    :param num_of_rand_resets:
     :return:
     """
-    # Set up random route
     route = r.create_random_route(route_length)  # Set up a route with 24 cities
     travel_distance = r.get_total_distance(data, route)  # Initiate start solution
-    # Begin climbing, try out a number of swaps
     num_evaluations = 1
     while num_evaluations < 10000:
         move_made = False
-        for next_route in one_swap_crossover_system(route):
+        for next_route in one_swap_crossover(route):
             if num_evaluations >= 10000:
                 break
             updated_dist = r.get_total_distance(data, next_route)
@@ -70,10 +91,8 @@ def hill_climber(data, route_length=24, num_of_rand_resets=100):
                 travel_distance = updated_dist
                 move_made = True
                 break
-
         if not move_made:
             break
-    print(num_evaluations)
     return travel_distance, route
 
 def exhaustive_search(route_distance, data, route_length=6):
