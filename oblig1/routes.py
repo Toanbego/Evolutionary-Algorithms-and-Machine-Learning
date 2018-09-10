@@ -4,8 +4,6 @@ Created - 06.09.2018
 
 Package with functions regarding routes and distance for routes
 """
-import sys, os
-sys.path.append('C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1')
 import random
 import itertools
 
@@ -46,6 +44,7 @@ def create_permutation_of_routes(route_length=6, random_route=False) -> list:
             l.append(0)
             all_routes[n] = tuple(l)
         return all_routes
+
 
 def create_random_route(route_length = 10):
     """

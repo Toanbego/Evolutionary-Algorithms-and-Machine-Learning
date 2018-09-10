@@ -2,12 +2,6 @@
 Author - Torstein Gombos
 Created: 06.09.2018
 Solving the travelling salesman problem
-
-The various methods used will start from Barcelona, since it is the first in
-the index. Then it will find the quickest route through a set of cities
-before returning to Barcelona. The quickest route through a set of cities
-is independent of the starting city, so Barcelona is chosen as a constant
-starting point to make it easier to program the population (current solution).
 """
 import time
 import csv
@@ -94,7 +88,7 @@ def main():
         print("Performing hill climber search for solving the travelling salesman problem:\n"
               "===========================================================================")
         travel_distances, best_routes = [], []
-        for x in range(4):
+        for x in range(20):
             travel_distance, best_route = search.hill_climber(data, args.route_length, num_of_rand_resets=1)
             travel_distances.append(travel_distance), best_routes.append(best_route)
 
@@ -102,7 +96,6 @@ def main():
 
     elif args.method == "ga":
         travel_distances, best_routes = search.genetic_algorithm(data, args.route_length)
-
 
 
 # Time the execution
