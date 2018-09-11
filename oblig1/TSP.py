@@ -7,8 +7,12 @@ import time
 import csv
 import argparse
 import statistics
+import sys
 from oblig1 import routes as r
 from oblig1 import simple_search_algorithms as search
+# sys.path = ("C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1")
+
+
 
 
 def parse_arguments():

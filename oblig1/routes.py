@@ -8,13 +8,13 @@ import random
 import itertools
 
 
-def get_distance_cities(data, city1, city2) -> float:
+def get_distance_cities(data: list, city1: str, city2: str) -> float:
     """
     Calculates the distance between two cities from a CSV file
     Order of city does not matter.
     :param data: The data from the CSV file
-    :param city1: City1
-    :param city2: Cit2
+    :param city1: string with city name
+    :param city2: string with city na,e
     :return:
     """
     return float(data[data[0].index(city1)+1][data[0].index(city2)])
@@ -30,7 +30,6 @@ def create_permutation_of_routes(route_length=6) -> list:
     """
     route_starting_point = list(range(route_length))
     all_routes = list(itertools.permutations(route_starting_point[1:]))
-
     # Appends home destination to all permutations
     for n, element in enumerate(all_routes.copy()):
         list_of_routes = list(all_routes[n])
@@ -54,7 +53,7 @@ def create_random_route(route_length = 10):
     return random_route
 
 
-def get_total_distance(data, route) -> float:
+def get_total_distance(data: list, route: list) -> float:
     """
     Sum up the total distance for a route
     :param data: List of data

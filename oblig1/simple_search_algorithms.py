@@ -9,7 +9,7 @@ import ast
 import numpy as np
 from oblig1 import routes as r
 import statistics
-
+# TODO choose another way for survivor selection
 
 class Population:
     """
@@ -24,6 +24,7 @@ class Population:
         :param generation:
         """
         # Paramters and data
+        self.generation = generation
         self.prob_pmx = 0.8  # 80% chance for pmx crossover in offspring
         self.prob_mutate = 0.5 # 50% chance for 1-step mutation in offspring
         self.data = data  # TSP matrix
@@ -32,6 +33,7 @@ class Population:
         self.population = population  # Initialize population
         self.evaluation = self.evaluate_population(self.population)  # Evaluate current population
         # Create new population
+
         # self.parents = self.select_parents()  # Select new parents
         # self.offsprings = self.pmx()  # Create offsprings
         # self.offsprings = self.mutate_offspring()
@@ -58,12 +60,11 @@ class Population:
         self.offsprings = self.pmx()  # Create offsprings through pmx crossover
         self.mutate_offspring()  # Mutates the offspring through a swap permutation
         self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
-
-        # Select the 20% best parents and 20% best offsprings
-        # Replace
-        print(sorted(zip(self.evaluated_offspring, self.offsprings))[:3])
-
-
+        # Select the 20% best of current population and 20% best offsprings
+        # Or just replace population completely with offspring
+        # self.replace_population()
+        # Replace with the worst of population
+        self.population = self.offsprings
 
 
     def select_parents(self):
@@ -71,11 +72,10 @@ class Population:
         Selects parents based on fitness proportionate selection
         :return:
         """
-        p_fps = [(evaluation/(sum(self.evaluation))) for evaluation in self.evaluation]
+        selection_wheel = [(evaluation/(sum(self.evaluation))) for evaluation in self.evaluation]
         string_pop = [str(ind) for ind in self.population]  # Convert to string so it works for np array
-        selection = np.random.choice(string_pop, len(p_fps), p=p_fps)  # Random selection
+        selection = np.random.choice(string_pop, len(selection_wheel), p=selection_wheel)  # Random selection
         parents = [ast.literal_eval(parent) for parent in selection]  # Convert back to list
-
         return parents
 
     def pmx(self, prob=0.8):
@@ -149,10 +149,13 @@ class Population:
         return
 
     def replace_population(self):
-        pass
+        best_parents = sorted(zip(self.evaluation, self.parents))[:int(len(self.parents) * 0.2)]
+        best_offsprings = sorted(zip(self.evaluated_offspring, self.offsprings))[:int(len(self.offsprings) * 0.2)]
+        print(best_parents, best_offsprings)
+        print(len(best_parents), (len(best_offsprings)))
 
 
-def genetic_algorithm(data, route_length=24, pop_size=10):
+def genetic_algorithm(data, route_length=24, pop_size=100):
     """
     Create an instance of a population and perform a genetic mutation algorithm
     to find the best solution to TSP.
@@ -163,9 +166,11 @@ def genetic_algorithm(data, route_length=24, pop_size=10):
     """
     routes = [r.create_random_route(route_length) for route in range(pop_size)]
     routes = Population(data, routes)
-
-    for generations in range(1):
+    best_individual = 100000-max(routes.evaluation)
+    while best_individual > 23000:
         routes.evolve()
+    best_individual = 100000-max(routes.evaluation)
+    print(best_individual)
 
 
     # for i in range(routes.population):
