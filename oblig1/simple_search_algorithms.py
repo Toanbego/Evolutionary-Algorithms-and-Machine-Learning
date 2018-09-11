@@ -18,45 +18,64 @@ class Population:
     """
     def __init__(self, data,  population, generation=0):
         """
-        Take in a single individual and initiate a start population
-        :param individual:
+        Initiate population and evaluate it
+        :param data:
+        :param population:
+        :param generation:
         """
+        # Paramters and data
+        self.prob_pmx = 0.8  # 80% chance for pmx crossover in offspring
+        self.prob_mutate = 0.5 # 50% chance for 1-step mutation in offspring
         self.data = data  # TSP matrix
+        # Set up population and evaluate
         self.generation = generation
         self.population = population  # Initialize population
-        self.evaluation = self.evaluate_population()  # Evaluate population
-        self.parents = self.select_parents()  # select parents
-        self.offsprings = self.pmx()  # Create offsprings from parents
+        self.evaluation = self.evaluate_population(self.population)  # Evaluate current population
+        # Create new population
+        # self.parents = self.select_parents()  # Select new parents
+        # self.offsprings = self.pmx()  # Create offsprings
+        # self.offsprings = self.mutate_offspring()
 
-        self.offsprings = self.mutate_offspring()
-
-    def evaluate_population(self):
+    def evaluate_population(self, population):
         """
         Evaluate population
         :return:
         """
-        evals = []
-        for population in self.population:
+        evaluation = []
+        for individual in population:
             # -100000 is a trick to revert the lowest km to be best fitness
-            dist = 100000 - r.get_total_distance(self.data, population)
-            evals.append(dist)
+            dist = 100000 - r.get_total_distance(self.data, individual)
+            evaluation.append(dist)
+        return evaluation
 
-        return evals
+    def evolve(self):
+        """
+        Method for evolving generation by selecting parents and creating
+        offsprings.
+        :return:
+        """
+        self.parents = self.select_parents()  # Select new parents
+        self.offsprings = self.pmx()  # Create offsprings through pmx crossover
+        self.mutate_offspring()  # Mutates the offspring through a swap permutation
+        self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
+
+        # Select the 20% best parents and 20% best offsprings
+        # Replace
+        print(sorted(zip(self.evaluated_offspring, self.offsprings))[:3])
+
+
+
 
     def select_parents(self):
         """
         Selects parents based on fitness proportionate selection
         :return:
         """
-        p_fps = [(eval/(sum(self.evaluation))) for eval in self.evaluation]
-        string_pop = []
-        # Convert to string so that np.choice works as 1-d array
-        for ind in self.population:
-            string_pop.append(str(ind))
-        selection = np.random.choice(string_pop, len(p_fps), p=p_fps)
-        parents = []
-        for parent in selection:
-            parents.append(ast.literal_eval(parent))
+        p_fps = [(evaluation/(sum(self.evaluation))) for evaluation in self.evaluation]
+        string_pop = [str(ind) for ind in self.population]  # Convert to string so it works for np array
+        selection = np.random.choice(string_pop, len(p_fps), p=p_fps)  # Random selection
+        parents = [ast.literal_eval(parent) for parent in selection]  # Convert back to list
+
         return parents
 
     def pmx(self, prob=0.8):
@@ -64,45 +83,48 @@ class Population:
         Perform pmx on 80% % of parents
         :return:
         """
-        # Loop through mating pool
         offsprings = []
+        # Loop through mating pool
         for i in range(0, len(self.parents), 2):
+
+            # Probability that pmx happens
             if random.random() < prob:
                 offsprings.append(self.parents[i])
-                offsprings.append(self.parents[i+1])
+                offsprings.append(self.parents[i + 1])
                 continue
-            try:
-                # For loop to create two offsprings from same parents
-                for n in range(2):
-                    # Initiate offspring and two sub-segments
-                    if n == 0:
-                        parent1, parent2 = self.parents[i], self.parents[i + 1]
-                        start_stop = random.sample(range(1, len(parent1) - 1), 2)
-                        start, stop = min(start_stop), max(start_stop)
-                        sub_segment1, sub_segment2 = parent1[start:stop], parent2[start:stop]
-                    elif n == 1:
-                        parent2, parent1 = self.parents[i+1], self.parents[i]
-                        sub_segment1, sub_segment2 = parent2[start:stop], parent1[start:stop]
-                    offspring = [None] * (len(parent1))
-                    offspring[start:stop] = sub_segment1
-                    # Check if first element in sub_segment2 is in offspring1
-                    for element in sub_segment2:
-                        # Copy elements from sub_segment2 to offspring1
-                        if element not in offspring:
-                            idx = parent2.index(element) # Find position for element in p2
-                            while offspring[idx] is not None:
-                                value_for_idx_in_p1 = parent1[idx]  # Find the value for the same position in p1
-                                idx = parent2.index(value_for_idx_in_p1)  # Find the position for p1 in p2
-                                if offspring[idx] is None:  # Check if not occupied
-                                    offspring[idx] = element  # Copy element to this position
-                                    break
-                    # Copy remaining numbers from parent2 onto offspring
-                    for z, element in enumerate(parent2):
-                        if offspring[z] is None:
-                            offspring[z] = element
-                    offsprings.append(offspring)
-            except IndexError:
-                break
+
+            # For loop to create two offsprings from same parents
+            for n in range(2):
+                # Initiate offspring and two sub-segments
+                if n == 0:
+                    parent1, parent2 = self.parents[i], self.parents[i + 1]
+                    start_stop = random.sample(range(1, len(parent1) - 1), 2)
+                    start, stop = min(start_stop), max(start_stop)
+                    sub_segment1, sub_segment2 = parent1[start:stop], parent2[start:stop]
+                elif n == 1:
+                    parent2, parent1 = self.parents[i+1], self.parents[i]
+                    sub_segment1, sub_segment2 = parent2[start:stop], parent1[start:stop]
+                offspring = [None] * (len(parent1))
+                offspring[start:stop] = sub_segment1
+
+                # Check if first element in sub_segment2 is in offspring1
+                for element in sub_segment2:
+                    # Copy elements from sub_segment2 to offspring1
+                    if element not in offspring:
+                        idx = parent2.index(element) # Find position for element in p2
+                        while offspring[idx] is not None:
+                            value_for_idx_in_p1 = parent1[idx]  # Find the value for the same position in p1
+                            idx = parent2.index(value_for_idx_in_p1)  # Find the position for p1 in p2
+                            if offspring[idx] is None:  # Check if not occupied
+                                offspring[idx] = element  # Copy element to this position
+                                break
+
+                # Copy remaining numbers from parent2 onto offspring
+                for z, element in enumerate(parent2):
+                    if offspring[z] is None:
+                        offspring[z] = element
+                offsprings.append(offspring)
+
         return offsprings
 
     def mutate_offspring(self, prob=0.7):
@@ -110,21 +132,24 @@ class Population:
         A probability that an offspring will mutate with a swap
         :return:
         """
-
-        try:
-            for i, offspring in enumerate(self.offsprings):
+        for i, offspring in enumerate(self.offsprings):
+            try:
                 if random.random() < prob:
                     seq_idx = list(range(len(offspring)))
                     a1, a2 = random.sample(seq_idx[1:-1], 2)
                     offspring[a1], offspring[a2] = offspring[a2], offspring[a1]
+                    #Updates offspring
                     self.offsprings[i] = offspring
                 else:
                     continue
 
-        except TypeError:
-            print("stop")
+            except TypeError:
+                break
 
+        return
 
+    def replace_population(self):
+        pass
 
 
 def genetic_algorithm(data, route_length=24, pop_size=10):
@@ -138,9 +163,10 @@ def genetic_algorithm(data, route_length=24, pop_size=10):
     """
     routes = [r.create_random_route(route_length) for route in range(pop_size)]
     routes = Population(data, routes)
-    routes.mutate_offspring()
-    while routes.generation < 100:
-        pass
+
+    for generations in range(1):
+        routes.evolve()
+
 
     # for i in range(routes.population):
 
@@ -191,16 +217,19 @@ def hill_climber(data, route_length=24, num_of_rand_resets=100):
     :param num_of_rand_resets:
     :return:
     """
+    # Set up start route
     route = r.create_random_route(route_length)  # Set up a route with 24 cities
     travel_distance = r.get_total_distance(data, route)  # Initiate start solution
     num_evaluations = 1
+
+    # Start hill climbing
     while num_evaluations < 10000:
         move = False
         # Start swapping cities in the route
         for next_route in one_swap_crossover(route):
             updated_dist = r.get_total_distance(data, next_route)
             num_evaluations += 1
-            # Climb if better
+            # Climb if better than previous route
             if updated_dist < travel_distance:
                 route = next_route
                 travel_distance = updated_dist

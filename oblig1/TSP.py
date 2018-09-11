@@ -80,6 +80,8 @@ def main():
 
     # Run exhaustive search
     if args.method == "ex":
+        if args.route_length > 10:
+            args.route_length = 10
         travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data, args.route_length)
         get_result(data, best_route, travel_distance, algorithm="exhaustive search")
 
