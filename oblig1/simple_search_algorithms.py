@@ -9,7 +9,7 @@ import ast
 import numpy as np
 from oblig1 import routes as r
 import statistics
-# TODO choose another way for survivor selection
+import time
 
 class Population:
     """
@@ -25,11 +25,10 @@ class Population:
         """
         # Paramters and data
         self.generation = generation
-        self.prob_pmx = 0.8  # 80% chance for pmx crossover in offspring
-        self.prob_mutate = 0.5 # 50% chance for 1-step mutation in offspring
+        self.pmx_prob = 0.8  # 80% chance for pmx crossover in offspring
+        self.mutation_prob = 0.01 # 1% chance for 1-step mutation in offspring
         self.data = data  # TSP matrix
         # Set up population and evaluate
-        self.generation = generation
         self.population = population  # Initialize population
         self.evaluation = self.evaluate_population(self.population)  # Evaluate current population
         # Create new population
@@ -57,15 +56,13 @@ class Population:
         :return:
         """
         self.parents = self.select_parents()  # Select new parents
-        self.offsprings = self.pmx()  # Create offsprings through pmx crossover
-        self.mutate_offspring()  # Mutates the offspring through a swap permutation
+        self.offsprings = self.pmx(self.pmx_prob)  # Create offsprings through pmx crossover
+        # self.offsprings = self.order_pmx()
         self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
-        # Select the 20% best of current population and 20% best offsprings
-        # Or just replace population completely with offspring
-        # self.replace_population()
-        # Replace with the worst of population
-        self.population = self.offsprings
-
+        self.generation += 1
+        self.replace_population()
+        self.mutate_offspring(self.mutation_prob)  # Mutates the new population
+        return self.population, self.generation
 
     def select_parents(self):
         """
@@ -73,14 +70,42 @@ class Population:
         :return:
         """
         selection_wheel = [(evaluation/(sum(self.evaluation))) for evaluation in self.evaluation]
-        string_pop = [str(ind) for ind in self.population]  # Convert to string so it works for np array
-        selection = np.random.choice(string_pop, len(selection_wheel), p=selection_wheel)  # Random selection
-        parents = [ast.literal_eval(parent) for parent in selection]  # Convert back to list
+
+        # KEEP THIS. HAVE NOT TESTED THAT NEW METHOD PROPERLY DOES WHAT ITS SUPPOSED TO
+        # string_pop = [str(ind) for ind in self.population]  # Convert to string so it works for np array
+        # selection = np.random.choice(string_pop, len(selection_wheel), p=selection_wheel)  # Random selection
+        # parents = [ast.literal_eval(parent) for parent in selection]  # Convert back to list
+
+        selection = np.random.choice(range(len(self.population)), len(selection_wheel), p=selection_wheel)  # Random selection
+        parents = [self.population[parent] for parent in selection]  # Convert back to list
+
         return parents
+
+    def order_pmx(self, prob=0.8):
+        child = []
+        for i in range(0, len(self.parents), 2):
+
+
+            childP1 = []
+            childP2 = []
+
+            geneA = int(random.random() * len(self.parents[i]))
+            geneB = int(random.random() * len(self.parents[i+1]))
+
+            startGene = min(geneA, geneB)
+            endGene = max(geneA, geneB)
+
+            for r in range(startGene, endGene):
+                childP1.append(self.parents[i][r])
+
+            childP2 = [item for item in self.parents[i+1] if item not in childP1]
+
+            child.append(childP1 + childP2)
+        return child
 
     def pmx(self, prob=0.8):
         """
-        Perform pmx on 80% % of parents
+        Performs pmx on as many parents as the prob variable of parents
         :return:
         """
         offsprings = []
@@ -127,14 +152,14 @@ class Population:
 
         return offsprings
 
-    def mutate_offspring(self, prob=0.7):
+    def mutate_offspring(self, mutation_prob=0.01):
         """
         A probability that an offspring will mutate with a swap
         :return:
         """
         for i, offspring in enumerate(self.offsprings):
             try:
-                if random.random() < prob:
+                if random.random() < mutation_prob:
                     seq_idx = list(range(len(offspring)))
                     a1, a2 = random.sample(seq_idx[1:-1], 2)
                     offspring[a1], offspring[a2] = offspring[a2], offspring[a1]
@@ -149,10 +174,31 @@ class Population:
         return
 
     def replace_population(self):
-        best_parents = sorted(zip(self.evaluation, self.parents))[:int(len(self.parents) * 0.2)]
-        best_offsprings = sorted(zip(self.evaluated_offspring, self.offsprings))[:int(len(self.offsprings) * 0.2)]
-        print(best_parents, best_offsprings)
-        print(len(best_parents), (len(best_offsprings)))
+        """
+        Returns a new population
+        Selects a group of the best from current population (eliteism)
+        Selects the best new offsprings
+        Replaces the worst of the current population
+        :return:
+        """
+        best_population = sorted(range(len(self.evaluation)),
+                                         key=lambda i: self.evaluation[i])[:int(len(self.offsprings) * 0.1)]
+        best_offsprings = sorted(range(len(self.evaluated_offspring)),
+                                key=lambda i: self.evaluated_offspring[i])[:int(len(self.offsprings) * 0.4)]
+        worst_population = sorted(range(len(self.evaluation)),
+                                  key=lambda i: self.evaluation[i],
+                                  reverse=True)[:int(len(self.offsprings) * 0.5)]
+        # print(self.evaluation[worst_population[0]])
+        # print(self.evaluation[best_population[0]])
+        # print(self.evaluation[best_offsprings[0]])
+
+        for i, (best_pop, best_off) in enumerate(zip(best_population, best_offsprings)):
+            self.population[worst_population[i]] = self.population[best_pop]
+            self.population[worst_population[i+1]] = self.offsprings[best_off]
+
+
+        # print(best_current_population, "\n", best_offsprings, "\n", worst_population)
+        # print(len(best_current_population), (len(best_offsprings)), len(worst_population))
 
 
 def genetic_algorithm(data, route_length=24, pop_size=100):
@@ -166,9 +212,18 @@ def genetic_algorithm(data, route_length=24, pop_size=100):
     """
     routes = [r.create_random_route(route_length) for route in range(pop_size)]
     routes = Population(data, routes)
-    best_individual = 100000-max(routes.evaluation)
-    while best_individual > 23000:
-        routes.evolve()
+    print("start: ", (100000-max(routes.evaluation)))
+    for generation in range(1000):
+        # if generation % 10 == 0:
+        #     best_individual = 100000 - max(routes.evaluation)
+        #     print("\n")
+        #     print("Generation:          {}"
+        #           "\nAverage fitness:     {}"
+        #           "\nBest Individual:     {}".format(generation,
+        #                                              100000 - statistics.mean(routes.evaluation),
+        #                                              best_individual))
+        new_population, generation = routes.evolve()
+        routes = Population(data, new_population, generation)
     best_individual = 100000-max(routes.evaluation)
     print(best_individual)
 
