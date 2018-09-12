@@ -10,76 +10,90 @@ import numpy as np
 from oblig1 import routes as r
 import statistics
 import time
+import operator
+import pandas as pd
+
 
 class Population:
     """
     A class representing a populations of solutions and their
     mutations and crossovers over generations
     """
-    def __init__(self, data,  population, generation=0):
+    def __init__(self, data,  population, generation=0, eliteism=False):
         """
         Initiate population and evaluate it
         :param data:
         :param population:
         :param generation:
         """
-        # Paramters and data
+
+        # Parameters and data
         self.generation = generation
         self.pmx_prob = 0.8  # 80% chance for pmx crossover in offspring
-        self.mutation_prob = 0.01 # 1% chance for 1-step mutation in offspring
+        self.mutation_prob = 1/len(population[0])  # 1/number_of_cities
         self.data = data  # TSP matrix
+        self.eliteism = eliteism
+
         # Set up population and evaluate
         self.population = population  # Initialize population
         self.evaluation = self.evaluate_population(self.population)  # Evaluate current population
-        # Create new population
+        if self.eliteism:  # If true, choose a set of elites from the 10% best of population
+            self.elites = sorted(range(len(self.evaluation)),
+                                                 key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
 
-        # self.parents = self.select_parents()  # Select new parents
-        # self.offsprings = self.pmx()  # Create offsprings
-        # self.offsprings = self.mutate_offspring()
+        # Create new population. Initiated in evolve method
+        self.parents = None
+        self.offsprings = None  # Create offsprings
+        self.evaluated_offspring = None
 
     def evaluate_population(self, population):
         """
-        Evaluate population
+        Evaluate the fitness of a given population
+        :param population: A list with permutations of routes.
+        :return: Fitness
+        """
+        # Subtract fitness from 100000 is a trick to make shortest distance best fitness
+        fitness = [(100000 - r.get_total_distance(self.data, individual)) for individual in population]
+        return fitness
+
+    def select_parents(self):
+        """
+        Selects parents based on fitness proportionate selection.
+        Performs a windowing on fitness beforehand ot increase
+        the chance for better solutions to be picked.
         :return:
         """
-        evaluation = []
-        for individual in population:
-            # -100000 is a trick to revert the lowest km to be best fitness
-            dist = 100000 - r.get_total_distance(self.data, individual)
-            evaluation.append(dist)
-        return evaluation
+        # Perform windowing on fitness
+        window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
+        if sum(window_fitness) == 0:
+            # Means that there is to little diversity in population.
+            # We then mutate population to explore more, while keeping the best solutions
+            self.population = self.mutate_population()
+            self.evaluation = self.evaluate_population(self.population)
+            window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
+
+
+        # Create selection wheel
+        selection_wheel = [(fitness/sum(window_fitness)) for fitness in window_fitness]
+        selection = np.random.choice(range(len(self.population)), len(selection_wheel),
+                                     p=selection_wheel)  # Random selection
+        parents = [self.population[parent] for parent in selection]
+        return parents
 
     def evolve(self):
         """
         Method for evolving generation by selecting parents and creating
-        offsprings.
+        offsprings. Usually called outside class
         :return:
         """
         self.parents = self.select_parents()  # Select new parents
         self.offsprings = self.pmx(self.pmx_prob)  # Create offsprings through pmx crossover
-        # self.offsprings = self.order_pmx()
         self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
-        self.generation += 1
+        self.mutate_population(self.offsprings, self.mutation_prob)  # Mutates the new population
         self.replace_population()
-        self.mutate_offspring(self.mutation_prob)  # Mutates the new population
+        self.generation += 1
+
         return self.population, self.generation
-
-    def select_parents(self):
-        """
-        Selects parents based on fitness proportionate selection
-        :return:
-        """
-        selection_wheel = [(evaluation/(sum(self.evaluation))) for evaluation in self.evaluation]
-
-        # KEEP THIS. HAVE NOT TESTED THAT NEW METHOD PROPERLY DOES WHAT ITS SUPPOSED TO
-        # string_pop = [str(ind) for ind in self.population]  # Convert to string so it works for np array
-        # selection = np.random.choice(string_pop, len(selection_wheel), p=selection_wheel)  # Random selection
-        # parents = [ast.literal_eval(parent) for parent in selection]  # Convert back to list
-
-        selection = np.random.choice(range(len(self.population)), len(selection_wheel), p=selection_wheel)  # Random selection
-        parents = [self.population[parent] for parent in selection]  # Convert back to list
-
-        return parents
 
     def order_pmx(self, prob=0.8):
         child = []
@@ -152,28 +166,28 @@ class Population:
 
         return offsprings
 
-    def mutate_offspring(self, mutation_prob=0.01):
+    def mutate_population(self, population, mutation_prob=1/24):
         """
-        A probability that an offspring will mutate with a swap
+        A probability that an individual will mutate with a swap permutation
         :return:
         """
-        for i, offspring in enumerate(self.offsprings):
+        self.offsprings = population
+        mutated_population = []
+        for i, individual in enumerate(population):
             try:
                 if random.random() < mutation_prob:
-                    seq_idx = list(range(len(offspring)))
+                    seq_idx = list(range(len(individual)))
                     a1, a2 = random.sample(seq_idx[1:-1], 2)
-                    offspring[a1], offspring[a2] = offspring[a2], offspring[a1]
+                    individual[a1], individual[a2] = individual[a2], individual[a1]
                     #Updates offspring
-                    self.offsprings[i] = offspring
+                    self.offsprings[i] = individual
                 else:
                     continue
-
             except TypeError:
                 break
 
-        return
 
-    def replace_population(self):
+    def replace_population(self, eliteism=False):
         """
         Returns a new population
         Selects a group of the best from current population (eliteism)
@@ -181,27 +195,33 @@ class Population:
         Replaces the worst of the current population
         :return:
         """
-        best_population = sorted(range(len(self.evaluation)),
-                                         key=lambda i: self.evaluation[i])[:int(len(self.offsprings) * 0.1)]
-        best_offsprings = sorted(range(len(self.evaluated_offspring)),
-                                key=lambda i: self.evaluated_offspring[i])[:int(len(self.offsprings) * 0.4)]
-        worst_population = sorted(range(len(self.evaluation)),
-                                  key=lambda i: self.evaluation[i],
-                                  reverse=True)[:int(len(self.offsprings) * 0.5)]
-        # print(self.evaluation[worst_population[0]])
-        # print(self.evaluation[best_population[0]])
-        # print(self.evaluation[best_offsprings[0]])
+        if not eliteism:
+            self.population = self.offsprings
+        else:
+            best_population = sorted(range(len(self.evaluation)),
+                                             key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
+            best_offsprings = sorted(range(len(self.evaluated_offspring)),
+                                    key=lambda i: self.evaluated_offspring[i])[:int(len(self.offsprings) * 0.9)]
+            worst_population = sorted(range(len(self.evaluation)),
+                                      key=lambda i: self.evaluation[i],
+                                      reverse=False)[:int(len(self.offsprings) * 1)]
+            # print(self.evaluation[worst_population[0]])
+            # print(self.evaluation[best_population[0]])
+            # print(self.evaluation[best_offsprings[0]])
 
-        for i, (best_pop, best_off) in enumerate(zip(best_population, best_offsprings)):
-            self.population[worst_population[i]] = self.population[best_pop]
-            self.population[worst_population[i+1]] = self.offsprings[best_off]
+            # self.population[:100] = best_population[:]
+            # self.population[101:] = best_offsprings[:]
+
+            for i, (best_pop, best_off) in enumerate(zip(best_population, best_offsprings)):
+                self.population[worst_population[i]] = self.population[best_pop]
+                self.population[worst_population[i+1]] = self.offsprings[best_off]
 
 
         # print(best_current_population, "\n", best_offsprings, "\n", worst_population)
         # print(len(best_current_population), (len(best_offsprings)), len(worst_population))
 
 
-def genetic_algorithm(data, route_length=24, pop_size=100):
+def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False):
     """
     Create an instance of a population and perform a genetic mutation algorithm
     to find the best solution to TSP.
@@ -211,19 +231,19 @@ def genetic_algorithm(data, route_length=24, pop_size=100):
     :return:
     """
     routes = [r.create_random_route(route_length) for route in range(pop_size)]
-    routes = Population(data, routes)
-    print("start: ", (100000-max(routes.evaluation)))
-    for generation in range(1000):
-        # if generation % 10 == 0:
-        #     best_individual = 100000 - max(routes.evaluation)
-        #     print("\n")
-        #     print("Generation:          {}"
-        #           "\nAverage fitness:     {}"
-        #           "\nBest Individual:     {}".format(generation,
-        #                                              100000 - statistics.mean(routes.evaluation),
-        #                                              best_individual))
+    routes = Population(data, routes, eliteism=False)
+
+    for generation in range(500):
+        if generation % 10 == 0:
+            best_individual = 100000 - max(routes.evaluation)
+            print("\n")
+            print("Generation:          {}"
+                  "\nAverage fitness:     {}"
+                  "\nBest Individual:     {}".format(generation,
+                                                     100000 - statistics.mean(routes.evaluation),
+                                                     best_individual))
         new_population, generation = routes.evolve()
-        routes = Population(data, new_population, generation)
+        routes = Population(data, new_population, generation, eliteism=False)
     best_individual = 100000-max(routes.evaluation)
     print(best_individual)
 
