@@ -29,12 +29,14 @@ def create_permutation_of_routes(route_length=6) -> list:
     :return: List of all permutations of the set of cities
     """
     route_starting_point = list(range(route_length))
+    random.shuffle(route_starting_point)
     all_routes = list(itertools.permutations(route_starting_point[1:]))
+    print(len(all_routes))
     # Appends home destination to all permutations
     for n, element in enumerate(all_routes.copy()):
         list_of_routes = list(all_routes[n])
-        list_of_routes.insert(0, 0)
-        list_of_routes.append(0)
+        list_of_routes.insert(0, route_starting_point[0])
+        list_of_routes.append(route_starting_point[0])
         all_routes[n] = tuple(list_of_routes)
     return all_routes
 

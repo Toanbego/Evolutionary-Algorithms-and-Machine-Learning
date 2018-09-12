@@ -5,13 +5,9 @@ Created - 06.09.2018
 Module with some simple search algorithms that can be used for optimization.
 """
 import random
-import ast
-import numpy as np
 from oblig1 import routes as r
 import statistics
-import time
-import operator
-import pandas as pd
+
 
 
 class Population:
@@ -65,13 +61,6 @@ class Population:
         """
         # Perform windowing on fitness
         window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
-        if sum(window_fitness) == 0:
-            # Means that there is to little diversity in population.
-            # We then mutate population to explore more, while keeping the best solutions
-            self.population = self.mutate_population()
-            self.evaluation = self.evaluate_population(self.population)
-            window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
-
 
         # Create selection wheel
         selection_wheel = [(fitness/sum(window_fitness)) for fitness in window_fitness]
@@ -94,28 +83,6 @@ class Population:
         self.generation += 1
 
         return self.population, self.generation
-
-    def order_pmx(self, prob=0.8):
-        child = []
-        for i in range(0, len(self.parents), 2):
-
-
-            childP1 = []
-            childP2 = []
-
-            geneA = int(random.random() * len(self.parents[i]))
-            geneB = int(random.random() * len(self.parents[i+1]))
-
-            startGene = min(geneA, geneB)
-            endGene = max(geneA, geneB)
-
-            for r in range(startGene, endGene):
-                childP1.append(self.parents[i][r])
-
-            childP2 = [item for item in self.parents[i+1] if item not in childP1]
-
-            child.append(childP1 + childP2)
-        return child
 
     def pmx(self, prob=0.8):
         """
@@ -185,7 +152,6 @@ class Population:
                     continue
             except TypeError:
                 break
-
 
     def replace_population(self, eliteism=False):
         """
@@ -263,11 +229,12 @@ def one_swap_crossover(route):
     for swap in range(1000):
         seq_idx = list(range(len(route)))
         a1, a2 = random.sample(seq_idx[1:-1], 2)
-        copy = route[:]
-        copy[a1], copy[a2] = copy[a2], copy[a1]
-        yield copy
+        new_route = route[:]
+        new_route[a1], new_route[a2] = new_route[a2], new_route[a1]
+        yield new_route
 
 def one_swap_crossover_system(route):
+    # TODO, fjern denne, den brukes ikke.
     """
     Generates a sequence of random swaps
     :param route: The individual to perform crossover
@@ -330,9 +297,11 @@ def exhaustive_search(route_distance, data, route_length=6):
     routes = r.create_permutation_of_routes(route_length)
     fitness = route_distance(data, routes[0])  # Arbitrary start value
     # Loop through all possible solutions and pick the best one
+
     for step in routes:
         new_value = route_distance(data, step)
         if new_value < fitness:
             fitness = new_value
             x_value = step
+
     return fitness, x_value

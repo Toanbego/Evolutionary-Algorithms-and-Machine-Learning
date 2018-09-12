@@ -7,11 +7,9 @@ import time
 import csv
 import argparse
 import statistics
-import sys
-sys.path.append('~/Scripts/python')
 from oblig1 import routes as r
 from oblig1 import simple_search_algorithms as search
-# sys.path = ("C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1")
+
 
 
 
@@ -85,8 +83,8 @@ def main():
 
     # Run exhaustive search
     if args.method == "ex":
-        if args.route_length > 10:
-            args.route_length = 10
+        if args.route_length > 11:
+            args.route_length = 11
         travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data, args.route_length)
         get_result(data, best_route, travel_distance, algorithm="exhaustive search")
 
