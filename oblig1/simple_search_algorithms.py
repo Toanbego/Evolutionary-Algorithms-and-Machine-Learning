@@ -5,6 +5,7 @@ Created - 06.09.2018
 Module with some simple search algorithms that can be used for optimization.
 """
 import random
+import numpy as np
 from oblig1 import routes as r
 import statistics
 
@@ -198,26 +199,24 @@ def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False):
     """
     routes = [r.create_random_route(route_length) for route in range(pop_size)]
     routes = Population(data, routes, eliteism=False)
+    results = []
 
-    for generation in range(500):
-        if generation % 10 == 0:
-            best_individual = 100000 - max(routes.evaluation)
-            print("\n")
-            print("Generation:          {}"
-                  "\nAverage fitness:     {}"
-                  "\nBest Individual:     {}".format(generation,
-                                                     100000 - statistics.mean(routes.evaluation),
-                                                     best_individual))
+    # Start mutating
+    for generation in range(300):
+        # Obtain result
+        results.append(100000-max(routes.evaluation)) # Best fitness
+
+        # Evolve population
         new_population, generation = routes.evolve()
-        routes = Population(data, new_population, generation, eliteism=False)
-    best_individual = 100000-max(routes.evaluation)
-    print(best_individual)
+        routes = Population(data, new_population, generation, eliteism=True)
 
+    # Obtain last result
+    # results.append([100000 - max(routes.evaluation),  # Best fitness
+    #                 routes.population[routes.evaluation.index(max(routes.evaluation))],  # Best route
+    #                 100000 - statistics.mean(routes.evaluation),  # Average fitness
+    #                 100000 - statistics.stdev(routes.evaluation)])  # Standard deviation for fitness
 
-    # for i in range(routes.population):
-
-
-    return 1, 1
+    return results
 
 def one_swap_crossover(route):
     """
@@ -254,18 +253,20 @@ def one_swap_crossover_system(route):
             assert swapped_route[0] == swapped_route[-1], "start and home is not the same"
             yield swapped_route
 
-def hill_climber(data, route_length=24, num_of_rand_resets=100):
+def hill_climber(data, route_length=24, first_ten=False):
     """
     Hill climber algorithm that will check a neighboring solution
     If the neighbor solution is better, this becomes the new solution
     if not, keep the old one.
-    :param data:
-    :param route_length:
-    :param num_of_rand_resets:
+    :param data: Data from CSV file
+    :param route_length: Length of routes
     :return:
     """
     # Set up start route
-    route = r.create_random_route(route_length)  # Set up a route with 24 cities
+    if first_ten:
+        route = r.create_random_route_from_first_n_cities(route_length=10)
+    else:
+        route = r.create_random_route(route_length)  # Set up a route with 24 cities
     travel_distance = r.get_total_distance(data, route)  # Initiate start solution
     num_evaluations = 1
 
@@ -286,7 +287,7 @@ def hill_climber(data, route_length=24, num_of_rand_resets=100):
             break
     return travel_distance, route
 
-def exhaustive_search(route_distance, data, route_length=6):
+def exhaustive_search(data, route_length=6):
     """
     Function that searches every possible solution and returns global minimum
     :param route_distance: Function
@@ -295,11 +296,11 @@ def exhaustive_search(route_distance, data, route_length=6):
     """
     # Setup route permutations
     routes = r.create_permutation_of_routes(route_length)
-    fitness = route_distance(data, routes[0])  # Arbitrary start value
+    fitness = r.get_total_distance(data, routes[0])  # Arbitrary start value
     # Loop through all possible solutions and pick the best one
 
     for step in routes:
-        new_value = route_distance(data, step)
+        new_value = r.get_total_distance(data, step)
         if new_value < fitness:
             fitness = new_value
             x_value = step

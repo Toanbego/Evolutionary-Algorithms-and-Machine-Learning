@@ -54,6 +54,12 @@ def create_random_route(route_length = 10):
     random_route.append(random_route[0])  # Add home travel
     return random_route
 
+def create_random_route_from_first_n_cities(route_length=10):
+    route = list(range(route_length))
+    random.shuffle(route)
+    route.append(route[0])
+    return route
+
 
 def get_total_distance(data: list, route: list) -> float:
     """

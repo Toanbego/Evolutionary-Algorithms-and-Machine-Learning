@@ -7,10 +7,9 @@ import time
 import csv
 import argparse
 import statistics
-from oblig1 import routes as r
+import matplotlib.pyplot as plt
+import numpy as np
 from oblig1 import simple_search_algorithms as search
-
-
 
 
 
@@ -74,6 +73,16 @@ def get_result(data, route_idx, travel_distances, algorithm):
         print("The standard deviation was: ", std)
 
 
+def plott(results):
+
+    plt.plot(range(0, len(results)), results[:])
+
+    # Config the graph
+    plt.title('Optimize methods')
+    plt.xlabel('Generations')
+    plt.ylabel('Fitness')
+    plt.grid(True)
+    plt.legend(["Genetic Algorithm"], loc='upper left')
 
 
 def main():
@@ -83,25 +92,39 @@ def main():
 
     # Run exhaustive search
     if args.method == "ex":
-        if args.route_length > 11:
+        if args.route_length > 11:  # User may not use longer routes than 11 cities
             args.route_length = 11
-        travel_distance, best_route = search.exhaustive_search(r.get_total_distance, data, args.route_length)
+        travel_distance, best_route = search.exhaustive_search(data, args.route_length)
         get_result(data, best_route, travel_distance, algorithm="exhaustive search")
 
     # Run hill climber search
     elif args.method == "hc":
-        print("Performing hill climber search for solving the travelling salesman problem:\n"
-              "===========================================================================")
+        print("-- HILL CLIMBING --\n")
+        print("Performing on first 10 cities:")
+        # t0 = time.time()
+        # travel_distances, best_route = search.hill_climber(data, args.route_length, first_ten=True)
+        # t1 = time.time()
+        # print("The shortest route:")
+        # for city in best_route:
+        #     print(data[0][city], "->", end=" ")
+        # print("\nThe total distance is {}km".format(travel_distances))
+        # print("\nCode execution: {}s".format(t1 - t0))
+        # print("\n   -------------------------------------")
+        print("\nPerforming 20 hill climbs on random sequence of {} cities: ".format(args.route_length))
         travel_distances, best_routes = [], []
         for x in range(20):
-            travel_distance, best_route = search.hill_climber(data, args.route_length, num_of_rand_resets=1)
+            travel_distance, best_route = search.hill_climber(data, args.route_length)
             travel_distances.append(travel_distance), best_routes.append(best_route)
-
         get_result(data, best_routes, travel_distances, algorithm="hill climb")
 
+    # Run genetic algorithm
     elif args.method == "ga":
-        travel_distances, best_routes = search.genetic_algorithm(data, args.route_length)
-
+        population_sizes = [500, 1000, 5000]
+        for size in population_sizes:
+            print("performing with ", size)
+            result = search.genetic_algorithm(data, args.route_length, size)
+            plott(result)
+        plt.show()
 
 # Time the execution
 t0 = time.time()
