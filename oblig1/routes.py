@@ -14,10 +14,11 @@ def get_distance_cities(data: list, city1: str, city2: str) -> float:
     Order of city does not matter.
     :param data: The data from the CSV file
     :param city1: string with city name
-    :param city2: string with city na,e
+    :param city2: string with city name
     :return:
     """
     return float(data[data[0].index(city1)+1][data[0].index(city2)])
+
 
 
 def create_permutation_of_routes(route_length=6) -> list:
@@ -31,8 +32,11 @@ def create_permutation_of_routes(route_length=6) -> list:
     route_starting_point = list(range(route_length))
     random.shuffle(route_starting_point)
     all_routes = list(itertools.permutations(route_starting_point[1:]))
-    print(len(all_routes))
     # Appends home destination to all permutations
+    i = 0
+    for element in all_routes:
+        i+=1
+
     for n, element in enumerate(all_routes.copy()):
         list_of_routes = list(all_routes[n])
         list_of_routes.insert(0, route_starting_point[0])

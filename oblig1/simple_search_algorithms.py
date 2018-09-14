@@ -7,6 +7,7 @@ Module with some simple search algorithms that can be used for optimization.
 import random
 import numpy as np
 from oblig1 import routes as r
+import sys
 import statistics
 
 
@@ -16,7 +17,7 @@ class Population:
     A class representing a populations of solutions and their
     mutations and crossovers over generations
     """
-    def __init__(self, data,  population, generation=0, eliteism=False):
+    def __init__(self, data,  population, eliteism=False, hybrid=False):
         """
         Initiate population and evaluate it
         :param data:
@@ -25,11 +26,12 @@ class Population:
         """
 
         # Parameters and data
-        self.generation = generation
         self.pmx_prob = 0.8  # 80% chance for pmx crossover in offspring
         self.mutation_prob = 1/len(population[0])  # 1/number_of_cities
         self.data = data  # TSP matrix
-        self.eliteism = eliteism
+        self.eliteism = eliteism  # Checks whether eliteism is activated
+        self.hybrid = hybrid  # Checks whether hybrid local search is activated
+        self.hybrid_type = "lamarckian"  # Either Lamarckian or Baldwinian
 
         # Set up population and evaluate
         self.population = population  # Initialize population
@@ -41,6 +43,7 @@ class Population:
         # Create new population. Initiated in evolve method
         self.parents = None
         self.offsprings = None  # Create offsprings
+        self.optimized_offspring = None
         self.evaluated_offspring = None
 
     def evaluate_population(self, population):
@@ -76,14 +79,21 @@ class Population:
         offsprings. Usually called outside class
         :return:
         """
-        self.parents = self.select_parents()  # Select new parents
+        self.parents = self.select_parents()  # Parents selection
         self.offsprings = self.pmx(self.pmx_prob)  # Create offsprings through pmx crossover
-        self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
         self.mutate_population(self.offsprings, self.mutation_prob)  # Mutates the new population
-        self.replace_population()
-        self.generation += 1
+        if self.hybrid and self.hybrid_type == "lamarckian":  # Perform local search
+            self.optimized_offspring = self.local_search(self.offsprings)
+            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Evaluate the offsprings
 
-        return self.population, self.generation
+        elif self.hybrid and self.hybrid_type == "baldwinian":
+            self.optimized_offspring = self.local_search(self.offsprings)
+            self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
+
+        self.replace_population()  # Survivors selection
+
+
+        return self.population
 
     def pmx(self, prob=0.8):
         """
@@ -105,20 +115,25 @@ class Population:
                 # Initiate offspring and two sub-segments
                 if n == 0:
                     parent1, parent2 = self.parents[i], self.parents[i + 1]
+
                     start_stop = random.sample(range(1, len(parent1) - 1), 2)
                     start, stop = min(start_stop), max(start_stop)
                     sub_segment1, sub_segment2 = parent1[start:stop], parent2[start:stop]
                 elif n == 1:
                     parent2, parent1 = self.parents[i+1], self.parents[i]
                     sub_segment1, sub_segment2 = parent2[start:stop], parent1[start:stop]
-                offspring = [None] * (len(parent1))
+                offspring = [None] * (len(self.parents[i]))
                 offspring[start:stop] = sub_segment1
+
 
                 # Check if first element in sub_segment2 is in offspring1
                 for element in sub_segment2:
+
                     # Copy elements from sub_segment2 to offspring1
                     if element not in offspring:
-                        idx = parent2.index(element) # Find position for element in p2
+
+                        idx = parent2.index(element)  # Find position for element in p2
+
                         while offspring[idx] is not None:
                             value_for_idx_in_p1 = parent1[idx]  # Find the value for the same position in p1
                             idx = parent2.index(value_for_idx_in_p1)  # Find the position for p1 in p2
@@ -130,9 +145,51 @@ class Population:
                 for z, element in enumerate(parent2):
                     if offspring[z] is None:
                         offspring[z] = element
+
+                if offspring[0] != offspring[-1]:
+                    for n, item in enumerate(offspring):
+                        if offspring.count(item) > 1:
+                                # print(item)
+                                # print(offspring)
+                                offspring[0], offspring[n] = offspring[n], offspring[0]
+                                # print(offspring)
                 offsprings.append(offspring)
 
+
+
         return offsprings
+
+    def local_search(self, population):
+        """
+        Performs a hill climb on the offsprings for a local
+        search.
+        :return:
+        """
+        optimized_offspring = []
+        for individual in population:
+            # print(r.get_total_distance(self.data, individual))
+            ind = individual.copy()
+            travel_distance = r.get_total_distance(self.data, ind)  # Initiate start solution
+            num_evaluations = 1
+
+            # Start hill climbing
+            while num_evaluations < 10000:
+                move = False
+                # Start swapping cities in the route
+                for next_route in one_swap_crossover_system(ind):
+                    updated_dist = r.get_total_distance(self.data, next_route)
+                    num_evaluations += 1
+                    # Climb if better than previous route
+                    if updated_dist < travel_distance:
+                        ind = next_route
+                        travel_distance = updated_dist
+                        move = True
+                        break
+                if not move:
+                    break
+            # print(r.get_total_distance(self.data, ind))
+            optimized_offspring.append(ind)
+        return optimized_offspring
 
     def mutate_population(self, population, mutation_prob=1/24):
         """
@@ -154,7 +211,7 @@ class Population:
             except TypeError:
                 break
 
-    def replace_population(self, eliteism=False):
+    def replace_population(self):
         """
         Returns a new population
         Selects a group of the best from current population (eliteism)
@@ -162,8 +219,13 @@ class Population:
         Replaces the worst of the current population
         :return:
         """
-        if not eliteism:
-            self.population = self.offsprings
+        if not self.eliteism:
+            if self.hybrid_type == "lamarckian":
+                self.population = self.optimized_offspring
+            elif self.hybrid_type == "baldwinian":
+                self.population = self.offsprings
+            else:
+                self.population = self.offsprings
         else:
             best_population = sorted(range(len(self.evaluation)),
                                              key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
@@ -172,12 +234,7 @@ class Population:
             worst_population = sorted(range(len(self.evaluation)),
                                       key=lambda i: self.evaluation[i],
                                       reverse=False)[:int(len(self.offsprings) * 1)]
-            # print(self.evaluation[worst_population[0]])
-            # print(self.evaluation[best_population[0]])
-            # print(self.evaluation[best_offsprings[0]])
 
-            # self.population[:100] = best_population[:]
-            # self.population[101:] = best_offsprings[:]
 
             for i, (best_pop, best_off) in enumerate(zip(best_population, best_offsprings)):
                 self.population[worst_population[i]] = self.population[best_pop]
@@ -188,35 +245,35 @@ class Population:
         # print(len(best_current_population), (len(best_offsprings)), len(worst_population))
 
 
-def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False):
+def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybrid=False):
     """
     Create an instance of a population and perform a genetic mutation algorithm
     to find the best solution to TSP.
     :param data:
     :param route_length:
     :param pop_size:
+    :param hybrid
+    :param eliteism
     :return:
     """
+    # Initialize population
     routes = [r.create_random_route(route_length) for route in range(pop_size)]
-    routes = Population(data, routes, eliteism=False)
-    results = []
+    routes = Population(data, routes, eliteism=eliteism, hybrid=hybrid)
+    best_fitness = []
 
     # Start mutating
-    for generation in range(300):
+    for generation in range(10):
+        print(generation)
         # Obtain result
-        results.append(100000-max(routes.evaluation)) # Best fitness
+        best_fitness.append(100000-max(routes.evaluation))  # Best fitness
 
         # Evolve population
-        new_population, generation = routes.evolve()
-        routes = Population(data, new_population, generation, eliteism=True)
+        new_population = routes.evolve()
+        routes = Population(data, new_population, eliteism=eliteism, hybrid=hybrid)
+    last_fitness = 100000 - max(routes.evaluation)
 
-    # Obtain last result
-    # results.append([100000 - max(routes.evaluation),  # Best fitness
-    #                 routes.population[routes.evaluation.index(max(routes.evaluation))],  # Best route
-    #                 100000 - statistics.mean(routes.evaluation),  # Average fitness
-    #                 100000 - statistics.stdev(routes.evaluation)])  # Standard deviation for fitness
+    return best_fitness, last_fitness, routes.population, routes.evaluation
 
-    return results
 
 def one_swap_crossover(route):
     """
