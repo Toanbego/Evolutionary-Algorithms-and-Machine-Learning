@@ -6,6 +6,7 @@ Package with functions regarding routes and distance for routes
 """
 import random
 import itertools
+import numpy as np
 
 
 def get_distance_cities(data: list, city1: str, city2: str) -> float:

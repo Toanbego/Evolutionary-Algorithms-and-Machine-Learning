@@ -147,18 +147,17 @@ def main():
             tid0 = time.time()
             # Perform GA
             print("\nPerforming with ", size)
-            for i in range(1):
+            for i in range(10):
                 print("Run {} with {}".format(i, size))
                 best_fitness, last_fitness, population, evals =\
-                    search.genetic_algorithm(data, args.route_length, size, args.learning_model)
+                    search.genetic_algorithm(data, args.route_length, size)
                 tid1 = time.time()
                 fitnesses.append(best_fitness)  # All best fitness for each generations
                 last_fitnesses.append(last_fitness)  # Best fitness from last generation
                 best_route.append(population[evals.index(max(evals))])
                 worst_route.append(population[evals.index(min(evals))])
 
-            # average_20_runs = statistics.mean(last_fitnesses),  # Average fitness for 20 runs
-            # std_20_runs = statistics.stdev(last_fitnesses)  # Standard deviation for fitness for 20 runs
+
             print("Ga execution time: ", (tid1 - tid0))
             print("The shortest route was {}km:".format(min(last_fitnesses)))
             for city in best_route[last_fitnesses.index(min(last_fitnesses))]:
@@ -166,17 +165,20 @@ def main():
             print("\n\nThe longest route was {}km:".format(max(last_fitnesses)))
             for city in worst_route[last_fitnesses.index(max(last_fitnesses))]:
                 print(data[0][city], "->", end=" ")
-            # print("\n\nThe mean was: ", average_20_runs)
-            # print("The standard deviation was: ", std_20_runs)
+            if i > 2:
+                average_20_runs = statistics.mean(last_fitnesses),  # Average fitness for 20 runs
+                std_20_runs = statistics.stdev(last_fitnesses)  # Standard deviation for fitness for 20 runs
+                print("\n\nThe mean was: ", average_20_runs)
+                print("The standard deviation was: ", std_20_runs)
 
             # Plot
             plot(fitnesses[last_fitnesses.index(min(last_fitnesses))], population_sizes, size)
-        plt.show()
+        plt.savefig('{} - {}.png'.format(args.route_length, time.time()))
 
     # Run hybrid algorithm
 
     elif args.method == "hybrid":
-        population_sizes = [100, 700, 1200]
+        population_sizes = [500, 700, 1200]
         for size in population_sizes:
             fitnesses = []
             last_fitnesses = []

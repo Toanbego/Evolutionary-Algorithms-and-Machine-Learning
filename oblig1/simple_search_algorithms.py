@@ -294,8 +294,9 @@ def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybr
     best_fitness = []
 
     # Start mutating
-    for generation in range(3):
-        # print(generation)
+    for generation in range(1000):
+        if generation % 500 == 0:
+            print(generation)
         # Obtain result
         best_fitness.append(100000-max(routes.evaluation))  # Best fitness
 
