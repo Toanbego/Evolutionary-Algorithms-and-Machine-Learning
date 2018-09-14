@@ -45,16 +45,20 @@ def create_permutation_of_routes(route_length=6) -> list:
     return all_routes
 
 
-def create_random_route(route_length = 10):
+def create_random_route(route_length=10, seed=random.random()):
     """
     Returns a random sequence that can be used to access different indexes
     in the data variable from the CSV file.
     :param route_length: Length of sequence
     :return:
     """
-    # Generate a random route sequence starting from Barcelona
+    # Generate a random route sequence.
+    random.seed(seed)
+    random_route = random.sample(range(route_length), route_length)  # Generate random route
+    shuffle_inside = random_route[1:]
     random.seed()
-    random_route = random.sample(range(route_length), route_length)
+    random.shuffle(shuffle_inside)
+    random_route[1:] = shuffle_inside
     random_route.append(random_route[0])  # Add home travel
     return random_route
 

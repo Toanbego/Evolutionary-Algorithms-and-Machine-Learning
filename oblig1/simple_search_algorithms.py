@@ -105,7 +105,7 @@ class Population:
         for i in range(0, len(self.parents), 2):
 
             # Probability that pmx happens
-            if random.random() < prob:
+            if random.random() > prob:
                 offsprings.append(self.parents[i])
                 offsprings.append(self.parents[i + 1])
                 continue
@@ -158,6 +158,37 @@ class Population:
 
 
         return offsprings
+
+    def order_pmx(self, population):
+        """
+        This algorithm is inspired by the breed algorithm from:
+        https://towardsdatascience.com/evolution-of-a-salesman-a-complete-genetic-algorithm-tutorial-for-python-6fe5d2b3ca35
+        Which is and order crossover algorithm. All results used in the report is from my own hand made
+        pmx cross over, but i wanted to see if this method was any faster.
+
+        :param population:
+        :return:
+        """
+
+
+        child = []
+        childP1 = []
+        childP2 = []
+        for n in range(0, len(population), 2):
+
+            geneA = int(random.random() * len(population[n]))
+            geneB = int(random.random() * len(population[n+1]))
+
+            startGene = min(geneA, geneB)
+            endGene = max(geneA, geneB)
+
+            for i in range(startGene, endGene):
+                childP1.append(population[i])  # Append parent 1
+
+            childP2 = [item for item in parent2 if item not in childP1]
+
+            child = childP1 + childP2
+        return child
 
     def local_search(self, population):
         """
@@ -220,9 +251,9 @@ class Population:
         :return:
         """
         if not self.eliteism:
-            if self.hybrid_type == "lamarckian":
+            if self. hybrid and self.hybrid_type == "lamarckian":
                 self.population = self.optimized_offspring
-            elif self.hybrid_type == "baldwinian":
+            elif self. hybrid and self.hybrid_type == "baldwinian":
                 self.population = self.offsprings
             else:
                 self.population = self.offsprings
@@ -257,13 +288,14 @@ def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybr
     :return:
     """
     # Initialize population
-    routes = [r.create_random_route(route_length) for route in range(pop_size)]
+    seed_for_pop = random.random()
+    routes = [r.create_random_route(route_length, seed_for_pop) for route in range(pop_size)]
     routes = Population(data, routes, eliteism=eliteism, hybrid=hybrid)
     best_fitness = []
 
     # Start mutating
-    for generation in range(10):
-        print(generation)
+    for generation in range(2):
+        # print(generation)
         # Obtain result
         best_fitness.append(100000-max(routes.evaluation))  # Best fitness
 
