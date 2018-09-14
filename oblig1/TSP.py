@@ -26,7 +26,9 @@ def parse_arguments():
                              ' -m hc    -   Hill climber search')
     parser.add_argument('--route_length', '-r', type=int, default=10,
                         help='Choose length of route.')
-    # parser.add_argument("--")
+    parser.add_argument("--learning_model", "-l", type=str, default="lamarck",
+                        help='Choose either lamarckian or baldwinian learning method'
+                             'Only usable for hybrid method')
 
     return parser.parse_args()
 
@@ -147,7 +149,8 @@ def main():
             print("\nPerforming with ", size)
             for i in range(1):
                 print("Run {} with {}".format(i, size))
-                best_fitness, last_fitness, population, evals = search.genetic_algorithm(data, args.route_length, size)
+                best_fitness, last_fitness, population, evals =\
+                    search.genetic_algorithm(data, args.route_length, size, args.learning_model)
                 tid1 = time.time()
                 fitnesses.append(best_fitness)  # All best fitness for each generations
                 last_fitnesses.append(last_fitness)  # Best fitness from last generation
@@ -170,6 +173,8 @@ def main():
             plot(fitnesses[last_fitnesses.index(min(last_fitnesses))], population_sizes, size)
         plt.show()
 
+    # Run hybrid algorithm
+
     elif args.method == "hybrid":
         population_sizes = [100, 700, 1200]
         for size in population_sizes:
@@ -180,7 +185,7 @@ def main():
 
             # Perform GA
             print("\nPerforming with ", size)
-            for i in range(1):
+            for i in range(3):
                 print("Run {} with {}".format(i, size))
                 best_fitness, last_fitness, population, evals =\
                     search.genetic_algorithm(data, args.route_length, size, hybrid=True)
@@ -189,8 +194,8 @@ def main():
                 best_route.append(population[evals.index(max(evals))])
                 worst_route.append(population[evals.index(min(evals))])
 
-            # average_20_runs = statistics.mean(last_fitnesses),  # Average fitness for 20 runs
-            # std_20_runs = statistics.stdev(last_fitnesses)  # Standard deviation for fitness for 20 runs
+            average_20_runs = statistics.mean(last_fitnesses),  # Average fitness for 20 runs
+            std_20_runs = statistics.stdev(last_fitnesses)  # Standard deviation for fitness for 20 runs
 
             print("The shortest route was {}km:".format(min(last_fitnesses)))
             for city in best_route[last_fitnesses.index(min(last_fitnesses))]:
@@ -198,8 +203,8 @@ def main():
             print("\n\nThe longest route was {}km:".format(max(last_fitnesses)))
             for city in worst_route[last_fitnesses.index(max(last_fitnesses))]:
                 print(data[0][city], "->", end=" ")
-            # print("\n\nThe mean was: ", average_20_runs)
-            # print("The standard deviation was: ", std_20_runs)
+            print("\n\nThe mean was: ", average_20_runs)
+            print("The standard deviation was: ", std_20_runs)
 
             # Plot
             plot(fitnesses[last_fitnesses.index(min(last_fitnesses))], population_sizes, size)
