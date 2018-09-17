@@ -4,7 +4,6 @@ Created - 06.09.2018
 
 Module that contains all the search algorithms used for this assignment
 
-
 """
 import random
 import numpy as np
@@ -15,31 +14,40 @@ class Population:
     """
     A class representing a populations of solutions and their
     mutations and crossovers over generations
+
+    Attributes:
+        pmx_prob            - Chance for pmx to happen for each parent
+        mutation_prob       - Chance for mutation
+        data                - Data from CSV
+        hybrid              - If hybrid mode is oon
+        hybrid_type         - What learning model is used
+        population          - All the current solutions to problem
+        evaluation          - The fitness of the solutions
+        parents             - The selected parents from a population
+        offspring           - The resulting children from pmx
+        optimized offspring - Offspring after local search
+        evaluated_offspring - Fitness of offspring
+
     """
-    def __init__(self, data,  population, eliteism=False, hybrid=False, hybrid_type="lamarckian", fitness=None):
+    def __init__(self, data,  population, hybrid=False, hybrid_type="lamarckian"):
         """
         Initiate hyper parameters, population and evaluate fitness
-        :param data:
-        :param population:
-        :param eliteism:
-        :param hybrid:
+        :param data: The data from the CSV file
+        :param population: All the individuals/routes
+        :param hybrid: Boolean. If hybrid is turned on
+        :param hybrid_type String. what learning model is used
         """
 
         # Parameters and data
         self.pmx_prob = 0.8  # 80% chance for pmx crossover in offspring
         self.mutation_prob = 1/len(population[0])  # 1/number_of_cities
         self.data = data  # TSP matrix
-        self.eliteism = eliteism  # Checks whether eliteism is activated
         self.hybrid = hybrid  # Checks whether hybrid local search is activated
         self.hybrid_type = hybrid_type  # Either Lamarckian or Baldwinian
 
         # Set up population and evaluate
         self.population = population  # Initialize population
         self.evaluation = self.evaluate_population(self.population)  # Evaluate current population
-
-        if self.eliteism:  # If true, choose a set of elites from the 10% best of population
-            self.elites = sorted(range(len(self.evaluation)),
-                                                 key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
 
         # Evolve new population. Initiated in evolve method
         self.parents = None
@@ -59,8 +67,9 @@ class Population:
 
     def evolve(self):
         """
-        Method for evolving generation by selecting parents and creating
-        offsprings. Usually called outside class
+        Evolves the population
+        Ends by replacing the population with the new
+        one.
         :return:
         """
         # Evolve population
@@ -72,9 +81,11 @@ class Population:
     def select_parents(self):
         """
         Selects parents based on fitness proportionate selection.
-        Performs a windowing on fitness beforehand ot increase
-        the chance for better solutions to be picked.
-        :return:
+        Performs a windowing on fitness beforehand to increase
+        the chance for better solutions to be picked. If there
+        is to little diversity in the population, population is forced
+        to evolve
+        :return: parents
         """
         # Perform windowing on fitness
         window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
@@ -94,7 +105,9 @@ class Population:
 
     def pmx(self, prob=0.8):
         """
-        Performs pmx on as many parents as the prob variable of parents
+        Performs pmx on parents to create offspring
+        Will only perform on 80% on population based on
+        a probability.
         :return:
         """
         offsprings = []
@@ -191,7 +204,7 @@ class Population:
                 seq_idx = list(range(len(individual)))
                 a1, a2 = random.sample(seq_idx[1:-1], 2)
                 individual[a1], individual[a2] = individual[a2], individual[a1]
-                #Updates offspring
+                # Updates offspring
                 offspring.append(individual)
             else:
                 offspring.append(individual)
@@ -228,7 +241,6 @@ class Population:
 
 def genetic_algorithm(data, route_length=24,
                       pop_size=1000,
-                      eliteism=False,
                       hybrid=False,
                       generations=150,
                       hybrid_type="lamarckian"):
@@ -240,7 +252,6 @@ def genetic_algorithm(data, route_length=24,
     :param data: Data from CSV file
     :param route_length: Length of each route
     :param pop_size: Size of population
-    :param eliteism: Boolean to check if eliteism is activated
     :param hybrid: Boolean to check if hybrid is activated
     :return: Results from algorithm
     """
@@ -250,23 +261,17 @@ def genetic_algorithm(data, route_length=24,
     routes = [r.create_random_route(route_length, seed_for_pop) for route in range(pop_size)]
 
     # Initiate class
-    routes = Population(data, routes, eliteism=eliteism, hybrid=hybrid, hybrid_type=hybrid_type)
+    routes = Population(data, routes, hybrid=hybrid, hybrid_type=hybrid_type)
 
-    best_fitness = []
-    # Start mutating
+    best_fitness = []  # List that will contain the best fitness of each generation
+    # Start evolving over generations
     for generation in range(generations):
-        # if generation % 50 == 0:  # print every 50 generation
-        #     print(generation)
-        # Obtain result
-        best_fitness.append(100000-max(routes.evaluation))  # Best fitness
 
+        best_fitness.append(100000-max(routes.evaluation))
         # Evolve population
         routes.evolve()  # Initiates evolve method in Population class
 
-        # new_population, fitness = routes.evolve()  # Initiates evolve method in Population class
-        # routes = Population(data, new_population, eliteism=eliteism, hybrid=hybrid, fitness=fitness)
     final_fitness = best_fitness[-1]
-
     return best_fitness, final_fitness, routes.population, routes.evaluation
 
 

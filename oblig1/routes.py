@@ -63,7 +63,14 @@ def create_random_route(route_length=10, seed=random.random()):
     random_route.append(random_route[0])  # Add home travel
     return random_route
 
+
 def create_random_route_from_first_n_cities(route_length=10):
+    """
+    Creates a random route containing the n first cities in the
+    CSV file. Used to get right results from hill climber
+    :param route_length:
+    :return:
+    """
     route = list(range(route_length))
     random.shuffle(route)
     route.append(route[0])

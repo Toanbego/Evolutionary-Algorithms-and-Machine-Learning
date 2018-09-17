@@ -35,11 +35,14 @@ User&nbsp;provides&nbsp;how&nbsp;many&nbsp;cities&nbsp;to&nbsp;be&nbsp;included<
 :param&nbsp;route_length:&nbsp;How&nbsp;many&nbsp;cities&nbsp;to&nbsp;be&nbsp;included<br>
 :param&nbsp;random_route:&nbsp;Checks&nbsp;for&nbsp;a&nbsp;random&nbsp;set&nbsp;of&nbsp;cities&nbsp;of&nbsp;the&nbsp;24&nbsp;cities<br>
 :return:&nbsp;List&nbsp;of&nbsp;all&nbsp;permutations&nbsp;of&nbsp;the&nbsp;set&nbsp;of&nbsp;cities</tt></dd></dl>
- <dl><dt><a name="-create_random_route"><strong>create_random_route</strong></a>(route_length=10, seed=0.1518279787661363)</dt><dd><tt>Returns&nbsp;a&nbsp;random&nbsp;sequence&nbsp;that&nbsp;can&nbsp;be&nbsp;used&nbsp;to&nbsp;access&nbsp;different&nbsp;indexes<br>
+ <dl><dt><a name="-create_random_route"><strong>create_random_route</strong></a>(route_length=10, seed=0.9299462696627205)</dt><dd><tt>Returns&nbsp;a&nbsp;random&nbsp;sequence&nbsp;that&nbsp;can&nbsp;be&nbsp;used&nbsp;to&nbsp;access&nbsp;different&nbsp;indexes<br>
 in&nbsp;the&nbsp;data&nbsp;variable&nbsp;from&nbsp;the&nbsp;CSV&nbsp;file.<br>
 :param&nbsp;route_length:&nbsp;Length&nbsp;of&nbsp;sequence<br>
 :return:</tt></dd></dl>
- <dl><dt><a name="-create_random_route_from_first_n_cities"><strong>create_random_route_from_first_n_cities</strong></a>(route_length=10)</dt></dl>
+ <dl><dt><a name="-create_random_route_from_first_n_cities"><strong>create_random_route_from_first_n_cities</strong></a>(route_length=10)</dt><dd><tt>Creates&nbsp;a&nbsp;random&nbsp;route&nbsp;containing&nbsp;the&nbsp;n&nbsp;first&nbsp;cities&nbsp;in&nbsp;the<br>
+CSV&nbsp;file.&nbsp;Used&nbsp;to&nbsp;get&nbsp;right&nbsp;results&nbsp;from&nbsp;hill&nbsp;climber<br>
+:param&nbsp;route_length:<br>
+:return:</tt></dd></dl>
  <dl><dt><a name="-get_distance_cities"><strong>get_distance_cities</strong></a>(data:list, city1:str, city2:str) -&gt; float</dt><dd><tt>Calculates&nbsp;the&nbsp;distance&nbsp;between&nbsp;two&nbsp;cities&nbsp;from&nbsp;a&nbsp;CSV&nbsp;file<br>
 Order&nbsp;of&nbsp;city&nbsp;does&nbsp;not&nbsp;matter.<br>
 :param&nbsp;data:&nbsp;The&nbsp;data&nbsp;from&nbsp;the&nbsp;CSV&nbsp;file<br>

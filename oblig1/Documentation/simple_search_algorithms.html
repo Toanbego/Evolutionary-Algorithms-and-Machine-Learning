@@ -46,21 +46,35 @@ Module&nbsp;that&nbsp;contains&nbsp;all&nbsp;the&nbsp;search&nbsp;algorithms&nbs
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>A&nbsp;class&nbsp;representing&nbsp;a&nbsp;populations&nbsp;of&nbsp;solutions&nbsp;and&nbsp;their<br>
-mutations&nbsp;and&nbsp;crossovers&nbsp;over&nbsp;generations<br>&nbsp;</tt></td></tr>
+mutations&nbsp;and&nbsp;crossovers&nbsp;over&nbsp;generations<br>
+&nbsp;<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pmx_prob&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;Chance&nbsp;for&nbsp;pmx&nbsp;to&nbsp;happen&nbsp;for&nbsp;each&nbsp;parent<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mutation_prob&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;Chance&nbsp;for&nbsp;mutation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;Data&nbsp;from&nbsp;CSV<br>
+&nbsp;&nbsp;&nbsp;&nbsp;hybrid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;If&nbsp;hybrid&nbsp;mode&nbsp;is&nbsp;oon<br>
+&nbsp;&nbsp;&nbsp;&nbsp;hybrid_type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;What&nbsp;learning&nbsp;model&nbsp;is&nbsp;used<br>
+&nbsp;&nbsp;&nbsp;&nbsp;population&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;All&nbsp;the&nbsp;current&nbsp;solutions&nbsp;to&nbsp;problem<br>
+&nbsp;&nbsp;&nbsp;&nbsp;evaluation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;The&nbsp;fitness&nbsp;of&nbsp;the&nbsp;solutions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;parents&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;The&nbsp;selected&nbsp;parents&nbsp;from&nbsp;a&nbsp;population<br>
+&nbsp;&nbsp;&nbsp;&nbsp;offspring&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;The&nbsp;resulting&nbsp;children&nbsp;from&nbsp;pmx<br>
+&nbsp;&nbsp;&nbsp;&nbsp;optimized&nbsp;offspring&nbsp;-&nbsp;Offspring&nbsp;after&nbsp;local&nbsp;search<br>
+&nbsp;&nbsp;&nbsp;&nbsp;evaluated_offspring&nbsp;-&nbsp;Fitness&nbsp;of&nbsp;offspring<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="Population-__init__"><strong>__init__</strong></a>(self, data, population, eliteism=False, hybrid=False, hybrid_type='lamarckian', fitness=None)</dt><dd><tt>Initiate&nbsp;hyper&nbsp;parameters,&nbsp;population&nbsp;and&nbsp;evaluate&nbsp;fitness<br>
-:param&nbsp;data:<br>
-:param&nbsp;population:<br>
-:param&nbsp;eliteism:<br>
-:param&nbsp;hybrid:</tt></dd></dl>
+<dl><dt><a name="Population-__init__"><strong>__init__</strong></a>(self, data, population, hybrid=False, hybrid_type='lamarckian')</dt><dd><tt>Initiate&nbsp;hyper&nbsp;parameters,&nbsp;population&nbsp;and&nbsp;evaluate&nbsp;fitness<br>
+:param&nbsp;data:&nbsp;The&nbsp;data&nbsp;from&nbsp;the&nbsp;CSV&nbsp;file<br>
+:param&nbsp;population:&nbsp;All&nbsp;the&nbsp;individuals/routes<br>
+:param&nbsp;hybrid:&nbsp;Boolean.&nbsp;If&nbsp;hybrid&nbsp;is&nbsp;turned&nbsp;on<br>
+:param&nbsp;hybrid_type&nbsp;String.&nbsp;what&nbsp;learning&nbsp;model&nbsp;is&nbsp;used</tt></dd></dl>
 
 <dl><dt><a name="Population-evaluate_population"><strong>evaluate_population</strong></a>(self, population)</dt><dd><tt>Evaluate&nbsp;the&nbsp;fitness&nbsp;of&nbsp;a&nbsp;given&nbsp;population<br>
 :param&nbsp;population:&nbsp;A&nbsp;list&nbsp;with&nbsp;permutations&nbsp;of&nbsp;routes.<br>
 :return:&nbsp;Fitness</tt></dd></dl>
 
-<dl><dt><a name="Population-evolve"><strong>evolve</strong></a>(self)</dt><dd><tt>Method&nbsp;for&nbsp;evolving&nbsp;generation&nbsp;by&nbsp;selecting&nbsp;parents&nbsp;and&nbsp;creating<br>
-offsprings.&nbsp;Usually&nbsp;called&nbsp;outside&nbsp;class<br>
+<dl><dt><a name="Population-evolve"><strong>evolve</strong></a>(self)</dt><dd><tt>Evolves&nbsp;the&nbsp;population<br>
+Ends&nbsp;by&nbsp;replacing&nbsp;the&nbsp;population&nbsp;with&nbsp;the&nbsp;new<br>
+one.<br>
 :return:</tt></dd></dl>
 
 <dl><dt><a name="Population-local_search"><strong>local_search</strong></a>(self, population)</dt><dd><tt>Performs&nbsp;a&nbsp;hill&nbsp;climb&nbsp;on&nbsp;the&nbsp;offsprings&nbsp;for&nbsp;a&nbsp;local.<br>
@@ -71,7 +85,9 @@ problem.&nbsp;Only&nbsp;performs&nbsp;max&nbsp;20&nbsp;climbs<br>
 <dl><dt><a name="Population-mutate_population"><strong>mutate_population</strong></a>(self, population, mutation_prob=0.041666666666666664)</dt><dd><tt>A&nbsp;probability&nbsp;that&nbsp;an&nbsp;individual&nbsp;will&nbsp;mutate&nbsp;with&nbsp;a&nbsp;swap&nbsp;permutation<br>
 :return:</tt></dd></dl>
 
-<dl><dt><a name="Population-pmx"><strong>pmx</strong></a>(self, prob=0.8)</dt><dd><tt>Performs&nbsp;pmx&nbsp;on&nbsp;as&nbsp;many&nbsp;parents&nbsp;as&nbsp;the&nbsp;prob&nbsp;variable&nbsp;of&nbsp;parents<br>
+<dl><dt><a name="Population-pmx"><strong>pmx</strong></a>(self, prob=0.8)</dt><dd><tt>Performs&nbsp;pmx&nbsp;on&nbsp;parents&nbsp;to&nbsp;create&nbsp;offspring<br>
+Will&nbsp;only&nbsp;perform&nbsp;on&nbsp;80%&nbsp;on&nbsp;population&nbsp;based&nbsp;on<br>
+a&nbsp;probability.<br>
 :return:</tt></dd></dl>
 
 <dl><dt><a name="Population-replace_population"><strong>replace_population</strong></a>(self)</dt><dd><tt>Method&nbsp;that&nbsp;replaces&nbsp;and&nbsp;evaluates&nbsp;new&nbsp;population.<br>
@@ -80,9 +96,11 @@ or&nbsp;normal&nbsp;GA&nbsp;with&nbsp;no&nbsp;local&nbsp;&nbsp;search<br>
 :return:</tt></dd></dl>
 
 <dl><dt><a name="Population-select_parents"><strong>select_parents</strong></a>(self)</dt><dd><tt>Selects&nbsp;parents&nbsp;based&nbsp;on&nbsp;fitness&nbsp;proportionate&nbsp;selection.<br>
-Performs&nbsp;a&nbsp;windowing&nbsp;on&nbsp;fitness&nbsp;beforehand&nbsp;ot&nbsp;increase<br>
-the&nbsp;chance&nbsp;for&nbsp;better&nbsp;solutions&nbsp;to&nbsp;be&nbsp;picked.<br>
-:return:</tt></dd></dl>
+Performs&nbsp;a&nbsp;windowing&nbsp;on&nbsp;fitness&nbsp;beforehand&nbsp;to&nbsp;increase<br>
+the&nbsp;chance&nbsp;for&nbsp;better&nbsp;solutions&nbsp;to&nbsp;be&nbsp;picked.&nbsp;If&nbsp;there<br>
+is&nbsp;to&nbsp;little&nbsp;diversity&nbsp;in&nbsp;the&nbsp;population,&nbsp;population&nbsp;is&nbsp;forced<br>
+to&nbsp;evolve<br>
+:return:&nbsp;parents</tt></dd></dl>
 
 <hr>
 Data descriptors defined here:<br>
@@ -103,14 +121,13 @@ Data descriptors defined here:<br>
 :param&nbsp;route_length:&nbsp;Length&nbsp;of&nbsp;route<br>
 :param&nbsp;data:&nbsp;The&nbsp;data&nbsp;that&nbsp;is&nbsp;needed&nbsp;for&nbsp;some&nbsp;functions<br>
 :return:&nbsp;Returns&nbsp;fitness&nbsp;and&nbsp;x&nbsp;value</tt></dd></dl>
- <dl><dt><a name="-genetic_algorithm"><strong>genetic_algorithm</strong></a>(data, route_length=24, pop_size=1000, eliteism=False, hybrid=False, generations=150, hybrid_type='lamarckian')</dt><dd><tt>Create&nbsp;an&nbsp;instance&nbsp;of&nbsp;a&nbsp;population&nbsp;and&nbsp;perform&nbsp;a&nbsp;genetic&nbsp;mutation&nbsp;algorithm<br>
+ <dl><dt><a name="-genetic_algorithm"><strong>genetic_algorithm</strong></a>(data, route_length=24, pop_size=1000, hybrid=False, generations=150, hybrid_type='lamarckian')</dt><dd><tt>Create&nbsp;an&nbsp;instance&nbsp;of&nbsp;a&nbsp;population&nbsp;and&nbsp;perform&nbsp;a&nbsp;genetic&nbsp;mutation&nbsp;algorithm<br>
 to&nbsp;find&nbsp;the&nbsp;best&nbsp;solution&nbsp;to&nbsp;TSP.<br>
 :param&nbsp;hybrid_type:&nbsp;String&nbsp;with&nbsp;the&nbsp;learning&nbsp;model&nbsp;to&nbsp;use&nbsp;if&nbsp;hybrid&nbsp;is&nbsp;on<br>
 :param&nbsp;generations:&nbsp;How&nbsp;many&nbsp;iterations&nbsp;to&nbsp;evolve&nbsp;on<br>
 :param&nbsp;data:&nbsp;Data&nbsp;from&nbsp;CSV&nbsp;file<br>
 :param&nbsp;route_length:&nbsp;Length&nbsp;of&nbsp;each&nbsp;route<br>
 :param&nbsp;pop_size:&nbsp;Size&nbsp;of&nbsp;population<br>
-:param&nbsp;eliteism:&nbsp;Boolean&nbsp;to&nbsp;check&nbsp;if&nbsp;eliteism&nbsp;is&nbsp;activated<br>
 :param&nbsp;hybrid:&nbsp;Boolean&nbsp;to&nbsp;check&nbsp;if&nbsp;hybrid&nbsp;is&nbsp;activated<br>
 :return:&nbsp;Results&nbsp;from&nbsp;algorithm</tt></dd></dl>
  <dl><dt><a name="-hill_climber"><strong>hill_climber</strong></a>(data, route_length=24, first_ten=False)</dt><dd><tt>Hill&nbsp;climber&nbsp;algorithm&nbsp;that&nbsp;will&nbsp;check&nbsp;a&nbsp;neighboring&nbsp;solution<br>

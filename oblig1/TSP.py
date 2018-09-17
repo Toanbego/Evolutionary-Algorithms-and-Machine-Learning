@@ -194,7 +194,7 @@ def main():
 
                 # Start genetic algorithm
                 best_fitness, final_fitness, population, evals =\
-                    search.genetic_algorithm(data, args.route_length, size, eliteism=False, generations=generations_ga)
+                    search.genetic_algorithm(data, args.route_length, size, generations=generations_ga)
 
                 # Calculate and store results
                 tid1 = time.time()
