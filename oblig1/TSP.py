@@ -3,13 +3,11 @@ Author - Torstein Gombos
 Created: 06.09.2018
 Solving the travelling salesman problem
 
-This is the main script, which does very little by itself. It will
-set up and run the various methods based on users arguments. See readme file for how
-to do that. The main function is hard coded to give out answers to the questions in the assignment.
-Anything related to optimization algorithms is imported from the
-simple_search_algorithms.py script
-anything related to creating routes and calculating distances is
-imported from routes.py
+The main script in which everything is run from.
+This reads the data from the CSV file and runs the different
+methods according to the arguments given from the user.
+It then returns the results and prints and plots in a manner
+that can answer the questions in  the assignment.
 
 """
 import time
@@ -17,18 +15,23 @@ import csv
 import argparse
 import statistics
 import matplotlib.pyplot as plt
+import sys
+sys.path.append("C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1")
 from oblig1 import simple_search_algorithms as search
+
 
 def parse_arguments():
     """
     Parse command line arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--method', '-m', type=str,
+    parser.add_argument('--method', '-m', type=str, default='ex',
                         help='Pick a method for solving travelling salesman problem:\n'
                              'Current methods available\n:'
                              ' -m ex    -   Exhaustive search\n'
-                             ' -m hc    -   Hill climber search')
+                             ' -m hc    -   Hill climber search'
+                             ' -m ga    -   Genetic Algorithm'
+                             ' -m hybrid    -   Hybrid algorithm')
     parser.add_argument('--route_length', '-r', type=int, default=10,
                         help='Choose length of route.')
     parser.add_argument("--learning_model", "-l", type=str, default="lamarck",
@@ -81,6 +84,23 @@ def get_result(data, route_idx, travel_distances, algorithm):
         print("The standard deviation was: ", std)
 
 
+def calculate_average_fitness(results):
+    """
+    Calculate average of the best fitness for
+    each generation over 20 runs
+    :param results:
+    :return: list with average best fitness
+    """
+    mean_best_fit = []
+    for n in range(len(results[0])):
+        element_fit = []
+        # elementfit = [element[i][n] for i, element in enumerate(results)]
+        for i, element in enumerate(results):
+            element_fit.append(results[i][n])
+        mean_best_fit.append(statistics.mean(element_fit))
+    return mean_best_fit
+
+
 def plot(results, population_sizes, size):
     """
     Plots result from genetic algorithm and hybrid
@@ -89,19 +109,15 @@ def plot(results, population_sizes, size):
     :param size:
     :return:
     """
-    mean_best_fit = []
-    print(len(results[:]))
-    print(len(results[:][0]))
-    print(results[:][0])
-    for n in range(len(results[0])):
-        mean_best_fit.append(statistics.mean(results[:][n]))
+    # Calculate the average fitness
+    results = calculate_average_fitness(results)
 
     if size == population_sizes[0]:
-        label1, = plt.plot(range(0, len(result)), mean_best_fit[:], label=str(population_sizes[0]))
+        label1, = plt.plot(range(0, len(results)), results[:], label=str(population_sizes[0]))
     elif size == population_sizes[1]:
-        label2, = plt.plot(range(0, len(result)), mean_best_fit[:], label=str(population_sizes[1]))
+        label2, = plt.plot(range(0, len(results)), results[:], label=str(population_sizes[1]))
     elif size == population_sizes[2]:
-        label3, = plt.plot(range(0, len(result)), mean_best_fit[:], label=str(population_sizes[2]))
+        label3, = plt.plot(range(0, len(results)), results[:], label=str(population_sizes[2]))
 
         plt.title('Genetic Algorithm')
         plt.xlabel('Generations')
@@ -113,18 +129,21 @@ def plot(results, population_sizes, size):
                    loc='upper right')
 
 
-
-
-
 def main():
     """
     This main function simply checks arguments and runs the various
     solutions and print the results according to the questions in the assignment
     :return:
     """
-    # Read file and fetch data from csv file and parse arguments
+    # Read data from csv file and parse arguments
     data = read_csv(file="european_cities.csv")
     args = parse_arguments()
+
+    # Population sizes and generations for genetic algorithms
+    population_size_ga = [200, 700, 1200]
+    population_size_hybrid = [20, 30, 50]
+    generations_ga = 400
+    generations_hybrid = 50
 
     # Run exhaustive search
     if args.method == "ex":
@@ -161,10 +180,9 @@ def main():
 
     # Run genetic algorithm
     elif args.method == "ga":
-        # TODO gjennmsnitt av beste fitness for hver generasjon
+
         # Set up population sizes
-        population_sizes = [500, 700, 1200]
-        for size in population_sizes:
+        for size in population_size_ga:
             fitnesses = []
             last_fitnesses = []
             best_route = []
@@ -173,17 +191,17 @@ def main():
 
             # Perform GA 20 times
             print("\nPerforming with ", size)
-            for i in range(5):
+            for i in range(1):
                 print("Run {} with {}".format(i, size))
 
                 # Start genetic algorithm
-                best_fitness, last_fitness, population, evals =\
-                    search.genetic_algorithm(data, args.route_length, size)
+                best_fitness, final_fitness, population, evals =\
+                    search.genetic_algorithm(data, args.route_length, size, eliteism=False, generations=generations_ga)
 
                 # Calculate and store results
                 tid1 = time.time()
                 fitnesses.append(best_fitness)  # All best fitness for each generations
-                last_fitnesses.append(last_fitness)  # Best fitness from last generation
+                last_fitnesses.append(final_fitness)  # Best fitness from last generation
                 best_route.append(population[evals.index(max(evals))])
                 worst_route.append(population[evals.index(min(evals))])
 
@@ -202,16 +220,14 @@ def main():
                 print("The standard deviation was: ", std_20_runs)
 
             # Plot results
-            # plot(fitnesses[last_fitnesses.index(min(last_fitnesses))], population_sizes, size)
-            plot(fitnesses, population_sizes, size)
-        plt.savefig('{} - {}.png'.format(args.route_length, time.time()))
+            plot(fitnesses, population_size_ga, size)
+        plt.savefig('figures/{} - {}.png'.format(args.route_length, time.time()))
 
     # Run hybrid algorithm
     elif args.method == "hybrid":
 
         # Set up population sizes
-        population_sizes = [500, 700, 1200]
-        for size in population_sizes:
+        for size in population_size_hybrid:
             fitnesses = []
             last_fitnesses = []
             best_route = []
@@ -219,37 +235,42 @@ def main():
 
             # Run Hybrid 20 times
             print("\nPerforming with ", size)
-            for i in range(3):
+            for i in range(20):
                 print("Run {} with {}".format(i, size))
-
                 # Perform hybrid genetic algorithm
-                best_fitness, last_fitness, population, evals =\
-                    search.genetic_algorithm(data, args.route_length, size, hybrid=True)
-
+                # Pardon the long line of code. A lot is returned and a lot is parsed
+                best_fitness,\
+                final_fitness,\
+                population,\
+                evals = search.genetic_algorithm(data, args.route_length, size,
+                                                 hybrid=True,
+                                                 hybrid_type=args.learning_model,
+                                                 generations=generations_hybrid)
                 # Calculate and store results
                 fitnesses.append(best_fitness)  # All best fitness for each generations
-                last_fitnesses.append(last_fitness)  # Best fitness from last generation
+                last_fitnesses.append(final_fitness)  # Best fitness from last generation
                 best_route.append(population[evals.index(max(evals))])
                 worst_route.append(population[evals.index(min(evals))])
 
-            average_20_runs = statistics.mean(last_fitnesses),  # Average fitness for 20 runs
-            std_20_runs = statistics.stdev(last_fitnesses)  # Standard deviation for fitness for 20 runs
-
-            # Print results
+            # Print out results
             print("The shortest route was {}km:".format(min(last_fitnesses)))
             for city in best_route[last_fitnesses.index(min(last_fitnesses))]:
                 print(data[0][city], "->", end=" ")
             print("\n\nThe longest route was {}km:".format(max(last_fitnesses)))
             for city in worst_route[last_fitnesses.index(max(last_fitnesses))]:
                 print(data[0][city], "->", end=" ")
-            print("\n\nThe mean was: ", average_20_runs)
-            print("The standard deviation was: ", std_20_runs)
+            if i > 2:
+                average_20_runs = statistics.mean(last_fitnesses),  # Average fitness for 20 runs
+                std_20_runs = statistics.stdev(last_fitnesses)  # Standard deviation for fitness for 20 runs
+                print("\n\nThe mean was: ", average_20_runs)
+                print("The standard deviation was: ", std_20_runs)
 
-            # Plot Results
-            plot(fitnesses[last_fitnesses.index(min(last_fitnesses))], population_sizes, size)
-            # plot(fitnesses[last_fitnesses.index(min(last_fitnesses))], population_sizes, size)
-
-        plt.show()
+            # Plot results
+            plot(fitnesses, population_size_hybrid, size)
+        plt.savefig('figures/{} {} {} - {}.png'.format(args.method,
+                                                       args.learning_model,
+                                                       args.route_length,
+                                                       time.time()))
 
 
 # Time the execution

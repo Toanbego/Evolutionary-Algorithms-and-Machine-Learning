@@ -18,7 +18,7 @@ class Population:
     A class representing a populations of solutions and their
     mutations and crossovers over generations
     """
-    def __init__(self, data,  population, eliteism=False, hybrid=False):
+    def __init__(self, data,  population, eliteism=False, hybrid=False, hybrid_type="lamarckian", fitness=None):
         """
         Initiate hyper parameters, population and evaluate fitness
         :param data:
@@ -33,11 +33,12 @@ class Population:
         self.data = data  # TSP matrix
         self.eliteism = eliteism  # Checks whether eliteism is activated
         self.hybrid = hybrid  # Checks whether hybrid local search is activated
-        self.hybrid_type = "lamarckian"  # Either Lamarckian or Baldwinian
+        self.hybrid_type = hybrid_type  # Either Lamarckian or Baldwinian
 
         # Set up population and evaluate
         self.population = population  # Initialize population
         self.evaluation = self.evaluate_population(self.population)  # Evaluate current population
+
         if self.eliteism:  # If true, choose a set of elites from the 10% best of population
             self.elites = sorted(range(len(self.evaluation)),
                                                  key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
@@ -64,21 +65,11 @@ class Population:
         offsprings. Usually called outside class
         :return:
         """
+        # Evolve population
         self.parents = self.select_parents()  # Parents selection
         self.offsprings = self.pmx(self.pmx_prob)  # Create offsprings through pmx crossover
-        self.mutate_population(self.offsprings, self.mutation_prob)  # Mutates the new population
-
-        if self.hybrid and self.hybrid_type == "lamarckian":  # Perform local search
-            self.optimized_offspring = self.local_search(self.offsprings)
-            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Evaluate the offsprings
-
-        elif self.hybrid and self.hybrid_type == "baldwinian":
-            self.optimized_offspring = self.local_search(self.offsprings)  # Perform local search
-            self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
-
-        self.replace_population()  # Survivors selection
-
-        return self.population
+        self.offsprings = self.mutate_population(self.offsprings, self.mutation_prob)  # Mutates the new population
+        self.replace_population()
 
     def select_parents(self):
         """
@@ -90,7 +81,13 @@ class Population:
         # Perform windowing on fitness
         window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
 
-        # Create selection wheel
+        # If there is too little diversity in population, mutate population
+        while sum(window_fitness) == 0:
+            self.population = self.mutate_population(self.population, 1)
+            self.evaluation = self.evaluate_population(self.population)
+            window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
+
+        # Create selection wheel and select parents from it
         selection_wheel = [(fitness / sum(window_fitness)) for fitness in window_fitness]
         selection = np.random.choice(range(len(self.population)), len(selection_wheel),
                                      p=selection_wheel)  # Random selection
@@ -155,8 +152,7 @@ class Population:
         """
         Performs a hill climb on the offsprings for a local.
         Same algorithm as for hill climber function. Only tweaked to fit this
-        problem.
-        search.
+        problem. Only performs max 20 climbs
         :return:
         """
         optimized_offspring = []
@@ -166,14 +162,14 @@ class Population:
             num_evaluations = 1
 
             # Start hill climbing
-            while num_evaluations < 10000:
+            # Only perform it a number of iterations. 15 in this case.
+            while num_evaluations < 20:
                 move = False
 
                 # Start swapping cities in the route
                 for next_route in one_swap_crossover_system(ind):
                     updated_dist = r.get_total_distance(self.data, next_route)
                     num_evaluations += 1
-
                     # Climb if better than previous route
                     if updated_dist < travel_distance:
                         ind = next_route
@@ -183,7 +179,6 @@ class Population:
 
                 if not move:
                     break
-            # print(r.get_total_distance(self.data, ind))
             optimized_offspring.append(ind)
         return optimized_offspring
 
@@ -192,52 +187,58 @@ class Population:
         A probability that an individual will mutate with a swap permutation
         :return:
         """
+        offspring = []
         for i, individual in enumerate(population):
             if random.random() < mutation_prob:
                 seq_idx = list(range(len(individual)))
                 a1, a2 = random.sample(seq_idx[1:-1], 2)
                 individual[a1], individual[a2] = individual[a2], individual[a1]
                 #Updates offspring
-                self.offsprings[i] = individual
+                offspring.append(individual)
             else:
-                continue
+                offspring.append(individual)
+        return offspring
 
     def replace_population(self):
         """
-        Returns a new population
-        Selects a group of the best from current population (eliteism)
-        Selects the best new offsprings
-        Replaces the worst of the current population
+        Method that replaces and evaluates new population.
+        Will do so either with a hybrid mode that executes a local search,
+        or normal GA with no local  search
         :return:
         """
-        # Can only use hybrid if eliteism is not activated
-        if not self.eliteism:
-            if self. hybrid and self.hybrid_type == "lamarckian":  # Replace with optimized offspring
-                self.population = self.optimized_offspring
-            elif self. hybrid and self.hybrid_type == "baldwinian":  # Replace ordinary offspring, keep fitness
-                self.population = self.offsprings
-            else:
-                self.population = self.offsprings  # Replace entire population with offspring (default)
+        # Replace and evaluate population
+        # Use lamarckian learning model
+        if self.hybrid and self.hybrid_type == "lamarckian":  # Perform local search
+            self.optimized_offspring = self.local_search(self.offsprings)
+            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Evaluate the offsprings
 
-        # If eliteism is activated, nex generation will have 10% best of current generation
+            self.population = self.optimized_offspring  # Replace with optimized offspring
+            self.evaluation = self.evaluated_offspring  # Evaluate the new population
+
+        # Use baldwinian learning model
+        elif self.hybrid and self.hybrid_type == "baldwinian":
+            self.optimized_offspring = self.local_search(self.offsprings)  # Perform local search
+            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Acquire fitness
+            self.population = self.offsprings  # Survivor selection
+            self.evaluation = self.evaluated_offspring  # Replace ordinary offspring, keep fitness
+
+        # Hybrid is not selected. Normal survivor selection
         else:
-            best_population = sorted(range(len(self.evaluation)),
-                                             key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
-            best_offsprings = sorted(range(len(self.evaluated_offspring)),
-                                    key=lambda i: self.evaluated_offspring[i])[:int(len(self.offsprings) * 0.9)]
-            worst_population = sorted(range(len(self.evaluation)),
-                                      key=lambda i: self.evaluation[i],
-                                      reverse=False)[:int(len(self.offsprings) * 1)]
-
-            for i, (best_pop, best_off) in enumerate(zip(best_population, best_offsprings)):
-                self.population[worst_population[i]] = self.population[best_pop]
-                self.population[worst_population[i+1]] = self.offsprings[best_off]
+            self.population = self.offsprings  # Replace entire population with offspring (No hybrid)
+            self.evaluation = self.evaluate_population(self.population)  # Re-evaluate fitness
 
 
-def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybrid=False, generations=150):
+def genetic_algorithm(data, route_length=24,
+                      pop_size=1000,
+                      eliteism=False,
+                      hybrid=False,
+                      generations=150,
+                      hybrid_type="lamarckian"):
     """
     Create an instance of a population and perform a genetic mutation algorithm
     to find the best solution to TSP.
+    :param hybrid_type: String with the learning model to use if hybrid is on
+    :param generations: How many iterations to evolve on
     :param data: Data from CSV file
     :param route_length: Length of each route
     :param pop_size: Size of population
@@ -245,25 +246,30 @@ def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybr
     :param hybrid: Boolean to check if hybrid is activated
     :return: Results from algorithm
     """
-    # Initialize population
+    # Create routes
+    # Used to create random starting tour
     seed_for_pop = random.random()
     routes = [r.create_random_route(route_length, seed_for_pop) for route in range(pop_size)]
-    routes = Population(data, routes, eliteism=eliteism, hybrid=hybrid)
-    best_fitness = []
 
+    # Initiate class
+    routes = Population(data, routes, eliteism=eliteism, hybrid=hybrid, hybrid_type=hybrid_type)
+
+    best_fitness = []
     # Start mutating
     for generation in range(generations):
-        if generation % 50 == 0:  # print every 50 generation
-            print(generation)
+        # if generation % 50 == 0:  # print every 50 generation
+        #     print(generation)
         # Obtain result
         best_fitness.append(100000-max(routes.evaluation))  # Best fitness
 
         # Evolve population
-        new_population = routes.evolve()  # Initiates evolve method in Population class
-        routes = Population(data, new_population, eliteism=eliteism, hybrid=hybrid)  # Replace population
-    last_fitness = best_fitness[-1]
+        routes.evolve()  # Initiates evolve method in Population class
 
-    return best_fitness, last_fitness, routes.population, routes.evaluation
+        # new_population, fitness = routes.evolve()  # Initiates evolve method in Population class
+        # routes = Population(data, new_population, eliteism=eliteism, hybrid=hybrid, fitness=fitness)
+    final_fitness = best_fitness[-1]
+
+    return best_fitness, final_fitness, routes.population, routes.evaluation
 
 
 def hill_climber(data, route_length=24, first_ten=False):
@@ -304,9 +310,9 @@ def hill_climber(data, route_length=24, first_ten=False):
 def exhaustive_search(data, route_length=6):
     """
     Function that searches every possible solution and returns global minimum
-    :param route_distance: Function
+    :param route_length: Length of route
     :param data: The data that is needed for some functions
-    :return: Returns y and x value
+    :return: Returns fitness and x value
     """
     # Setup route permutations
     routes = r.create_permutation_of_routes(route_length)
@@ -317,9 +323,9 @@ def exhaustive_search(data, route_length=6):
         new_value = r.get_total_distance(data, step)
         if new_value < fitness:
             fitness = new_value
-            x_value = step
+            route = step
 
-    return fitness, x_value
+    return fitness, route
 
 
 def one_swap_crossover(route):
