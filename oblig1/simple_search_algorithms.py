@@ -2,14 +2,15 @@
 Author - Torstein Gombos
 Created - 06.09.2018
 
-Module with some simple search algorithms that can be used for optimization.
+Module that contains all the search algorithms used for this assignment
+
+
 """
 import random
 import numpy as np
 from oblig1 import routes as r
 import sys
 import statistics
-
 
 
 class Population:
@@ -19,10 +20,11 @@ class Population:
     """
     def __init__(self, data,  population, eliteism=False, hybrid=False):
         """
-        Initiate population and evaluate it
+        Initiate hyper parameters, population and evaluate fitness
         :param data:
         :param population:
-        :param generation:
+        :param eliteism:
+        :param hybrid:
         """
 
         # Parameters and data
@@ -40,9 +42,9 @@ class Population:
             self.elites = sorted(range(len(self.evaluation)),
                                                  key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
 
-        # Create new population. Initiated in evolve method
+        # Evolve new population. Initiated in evolve method
         self.parents = None
-        self.offsprings = None  # Create offsprings
+        self.offsprings = None
         self.optimized_offspring = None
         self.evaluated_offspring = None
 
@@ -56,6 +58,28 @@ class Population:
         fitness = [(100000 - r.get_total_distance(self.data, individual)) for individual in population]
         return fitness
 
+    def evolve(self):
+        """
+        Method for evolving generation by selecting parents and creating
+        offsprings. Usually called outside class
+        :return:
+        """
+        self.parents = self.select_parents()  # Parents selection
+        self.offsprings = self.pmx(self.pmx_prob)  # Create offsprings through pmx crossover
+        self.mutate_population(self.offsprings, self.mutation_prob)  # Mutates the new population
+
+        if self.hybrid and self.hybrid_type == "lamarckian":  # Perform local search
+            self.optimized_offspring = self.local_search(self.offsprings)
+            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Evaluate the offsprings
+
+        elif self.hybrid and self.hybrid_type == "baldwinian":
+            self.optimized_offspring = self.local_search(self.offsprings)  # Perform local search
+            self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
+
+        self.replace_population()  # Survivors selection
+
+        return self.population
+
     def select_parents(self):
         """
         Selects parents based on fitness proportionate selection.
@@ -67,33 +91,11 @@ class Population:
         window_fitness = [(self.evaluation[i] - min(self.evaluation)) for i, item in enumerate(self.evaluation)]
 
         # Create selection wheel
-        selection_wheel = [(fitness/sum(window_fitness)) for fitness in window_fitness]
+        selection_wheel = [(fitness / sum(window_fitness)) for fitness in window_fitness]
         selection = np.random.choice(range(len(self.population)), len(selection_wheel),
                                      p=selection_wheel)  # Random selection
         parents = [self.population[parent] for parent in selection]
         return parents
-
-    def evolve(self):
-        """
-        Method for evolving generation by selecting parents and creating
-        offsprings. Usually called outside class
-        :return:
-        """
-        self.parents = self.select_parents()  # Parents selection
-        self.offsprings = self.pmx(self.pmx_prob)  # Create offsprings through pmx crossover
-        self.mutate_population(self.offsprings, self.mutation_prob)  # Mutates the new population
-        if self.hybrid and self.hybrid_type == "lamarckian":  # Perform local search
-            self.optimized_offspring = self.local_search(self.offsprings)
-            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Evaluate the offsprings
-
-        elif self.hybrid and self.hybrid_type == "baldwinian":
-            self.optimized_offspring = self.local_search(self.offsprings)
-            self.evaluated_offspring = self.evaluate_population(self.offsprings)  # Evaluate the offsprings
-
-        self.replace_population()  # Survivors selection
-
-
-        return self.population
 
     def pmx(self, prob=0.8):
         """
@@ -104,18 +106,19 @@ class Population:
         # Loop through mating pool
         for i in range(0, len(self.parents), 2):
 
-            # Probability that pmx happens
+            # Probability that pmx don't happen
             if random.random() > prob:
+                # Bring parent to next generation
                 offsprings.append(self.parents[i])
                 offsprings.append(self.parents[i + 1])
                 continue
 
             # For loop to create two offsprings from same parents
             for n in range(2):
+
                 # Initiate offspring and two sub-segments
                 if n == 0:
                     parent1, parent2 = self.parents[i], self.parents[i + 1]
-
                     start_stop = random.sample(range(1, len(parent1) - 1), 2)
                     start, stop = min(start_stop), max(start_stop)
                     sub_segment1, sub_segment2 = parent1[start:stop], parent2[start:stop]
@@ -124,7 +127,6 @@ class Population:
                     sub_segment1, sub_segment2 = parent2[start:stop], parent1[start:stop]
                 offspring = [None] * (len(self.parents[i]))
                 offspring[start:stop] = sub_segment1
-
 
                 # Check if first element in sub_segment2 is in offspring1
                 for element in sub_segment2:
@@ -146,59 +148,19 @@ class Population:
                     if offspring[z] is None:
                         offspring[z] = element
 
-                if offspring[0] != offspring[-1]:
-                    for n, item in enumerate(offspring):
-                        if offspring.count(item) > 1:
-                                # print(item)
-                                # print(offspring)
-                                offspring[0], offspring[n] = offspring[n], offspring[0]
-                                # print(offspring)
                 offsprings.append(offspring)
-
-
-
         return offsprings
-
-    def order_pmx(self, population):
-        """
-        This algorithm is inspired by the breed algorithm from:
-        https://towardsdatascience.com/evolution-of-a-salesman-a-complete-genetic-algorithm-tutorial-for-python-6fe5d2b3ca35
-        Which is and order crossover algorithm. All results used in the report is from my own hand made
-        pmx cross over, but i wanted to see if this method was any faster.
-
-        :param population:
-        :return:
-        """
-
-
-        child = []
-        childP1 = []
-        childP2 = []
-        for n in range(0, len(population), 2):
-
-            geneA = int(random.random() * len(population[n]))
-            geneB = int(random.random() * len(population[n+1]))
-
-            startGene = min(geneA, geneB)
-            endGene = max(geneA, geneB)
-
-            for i in range(startGene, endGene):
-                childP1.append(population[i])  # Append parent 1
-
-            childP2 = [item for item in parent2 if item not in childP1]
-
-            child = childP1 + childP2
-        return child
 
     def local_search(self, population):
         """
-        Performs a hill climb on the offsprings for a local
+        Performs a hill climb on the offsprings for a local.
+        Same algorithm as for hill climber function. Only tweaked to fit this
+        problem.
         search.
         :return:
         """
         optimized_offspring = []
         for individual in population:
-            # print(r.get_total_distance(self.data, individual))
             ind = individual.copy()
             travel_distance = r.get_total_distance(self.data, ind)  # Initiate start solution
             num_evaluations = 1
@@ -206,16 +168,19 @@ class Population:
             # Start hill climbing
             while num_evaluations < 10000:
                 move = False
+
                 # Start swapping cities in the route
                 for next_route in one_swap_crossover_system(ind):
                     updated_dist = r.get_total_distance(self.data, next_route)
                     num_evaluations += 1
+
                     # Climb if better than previous route
                     if updated_dist < travel_distance:
                         ind = next_route
                         travel_distance = updated_dist
                         move = True
                         break
+
                 if not move:
                     break
             # print(r.get_total_distance(self.data, ind))
@@ -227,20 +192,15 @@ class Population:
         A probability that an individual will mutate with a swap permutation
         :return:
         """
-        self.offsprings = population
-        mutated_population = []
         for i, individual in enumerate(population):
-            try:
-                if random.random() < mutation_prob:
-                    seq_idx = list(range(len(individual)))
-                    a1, a2 = random.sample(seq_idx[1:-1], 2)
-                    individual[a1], individual[a2] = individual[a2], individual[a1]
-                    #Updates offspring
-                    self.offsprings[i] = individual
-                else:
-                    continue
-            except TypeError:
-                break
+            if random.random() < mutation_prob:
+                seq_idx = list(range(len(individual)))
+                a1, a2 = random.sample(seq_idx[1:-1], 2)
+                individual[a1], individual[a2] = individual[a2], individual[a1]
+                #Updates offspring
+                self.offsprings[i] = individual
+            else:
+                continue
 
     def replace_population(self):
         """
@@ -250,13 +210,16 @@ class Population:
         Replaces the worst of the current population
         :return:
         """
+        # Can only use hybrid if eliteism is not activated
         if not self.eliteism:
-            if self. hybrid and self.hybrid_type == "lamarckian":
+            if self. hybrid and self.hybrid_type == "lamarckian":  # Replace with optimized offspring
                 self.population = self.optimized_offspring
-            elif self. hybrid and self.hybrid_type == "baldwinian":
+            elif self. hybrid and self.hybrid_type == "baldwinian":  # Replace ordinary offspring, keep fitness
                 self.population = self.offsprings
             else:
-                self.population = self.offsprings
+                self.population = self.offsprings  # Replace entire population with offspring (default)
+
+        # If eliteism is activated, nex generation will have 10% best of current generation
         else:
             best_population = sorted(range(len(self.evaluation)),
                                              key=lambda i: self.evaluation[i])[:int(len(self.population) * 0.1)]
@@ -266,26 +229,21 @@ class Population:
                                       key=lambda i: self.evaluation[i],
                                       reverse=False)[:int(len(self.offsprings) * 1)]
 
-
             for i, (best_pop, best_off) in enumerate(zip(best_population, best_offsprings)):
                 self.population[worst_population[i]] = self.population[best_pop]
                 self.population[worst_population[i+1]] = self.offsprings[best_off]
 
 
-        # print(best_current_population, "\n", best_offsprings, "\n", worst_population)
-        # print(len(best_current_population), (len(best_offsprings)), len(worst_population))
-
-
-def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybrid=False):
+def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybrid=False, generations=150):
     """
     Create an instance of a population and perform a genetic mutation algorithm
     to find the best solution to TSP.
-    :param data:
-    :param route_length:
-    :param pop_size:
-    :param hybrid
-    :param eliteism
-    :return:
+    :param data: Data from CSV file
+    :param route_length: Length of each route
+    :param pop_size: Size of population
+    :param eliteism: Boolean to check if eliteism is activated
+    :param hybrid: Boolean to check if hybrid is activated
+    :return: Results from algorithm
     """
     # Initialize population
     seed_for_pop = random.random()
@@ -294,54 +252,19 @@ def genetic_algorithm(data, route_length=24, pop_size=1000, eliteism=False, hybr
     best_fitness = []
 
     # Start mutating
-    for generation in range(1000):
-        if generation % 500 == 0:
+    for generation in range(generations):
+        if generation % 50 == 0:  # print every 50 generation
             print(generation)
         # Obtain result
         best_fitness.append(100000-max(routes.evaluation))  # Best fitness
 
         # Evolve population
-        new_population = routes.evolve()
-        routes = Population(data, new_population, eliteism=eliteism, hybrid=hybrid)
-    last_fitness = 100000 - max(routes.evaluation)
+        new_population = routes.evolve()  # Initiates evolve method in Population class
+        routes = Population(data, new_population, eliteism=eliteism, hybrid=hybrid)  # Replace population
+    last_fitness = best_fitness[-1]
 
     return best_fitness, last_fitness, routes.population, routes.evaluation
 
-
-def one_swap_crossover(route):
-    """
-    Swaps two random alleles with each other
-    :param route: The individual to perform crossover
-    :return: Mutated individual
-    """
-    # Sample two random alleles and swap them
-    for swap in range(1000):
-        seq_idx = list(range(len(route)))
-        a1, a2 = random.sample(seq_idx[1:-1], 2)
-        new_route = route[:]
-        new_route[a1], new_route[a2] = new_route[a2], new_route[a1]
-        yield new_route
-
-def one_swap_crossover_system(route):
-    # TODO, fjern denne, den brukes ikke.
-    """
-    Generates a sequence of random swaps
-    :param route: The individual to perform crossover
-    :return: Mutated individual
-    """
-    # Create a random index swap
-    ind1 = list(range(1, len(route)-1))
-    ind2 = list(range(1, len(route)-1))
-    random.shuffle(ind1)
-    random.shuffle(ind2)
-    # Loop through cities and swap
-    for city1 in ind1:
-        for city2 in ind2:
-            swapped_route = route[:]
-            swapped_route[city1], swapped_route[city2]\
-                = swapped_route[city2], swapped_route[city1]
-            assert swapped_route[0] == swapped_route[-1], "start and home is not the same"
-            yield swapped_route
 
 def hill_climber(data, route_length=24, first_ten=False):
     """
@@ -377,6 +300,7 @@ def hill_climber(data, route_length=24, first_ten=False):
             break
     return travel_distance, route
 
+
 def exhaustive_search(data, route_length=6):
     """
     Function that searches every possible solution and returns global minimum
@@ -396,3 +320,40 @@ def exhaustive_search(data, route_length=6):
             x_value = step
 
     return fitness, x_value
+
+
+def one_swap_crossover(route):
+    """
+    Swaps two random alleles with each other
+    :param route: The individual to perform crossover
+    :return: Mutated individual
+    """
+    # Sample two random cities and swap them
+    for swap in range(1000):
+        seq_idx = list(range(len(route)))
+        a1, a2 = random.sample(seq_idx[1:-1], 2)
+        new_route = route[:]
+        new_route[a1], new_route[a2] = new_route[a2], new_route[a1]
+        yield new_route
+
+
+def one_swap_crossover_system(route):
+    # TODO, fjern denne, den brukes ikke.
+    """
+    Generates a sequence of random swaps
+    :param route: The individual to perform crossover
+    :return: Mutated individual
+    """
+    # Create a random index swap
+    ind1 = list(range(1, len(route)-1))
+    ind2 = list(range(1, len(route)-1))
+    random.shuffle(ind1)
+    random.shuffle(ind2)
+    # Loop through cities and swap
+    for city1 in ind1:
+        for city2 in ind2:
+            swapped_route = route[:]
+            swapped_route[city1], swapped_route[city2]\
+                = swapped_route[city2], swapped_route[city1]
+            assert swapped_route[0] == swapped_route[-1], "start and home is not the same"
+            yield swapped_route
