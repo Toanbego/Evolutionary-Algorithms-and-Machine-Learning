@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module TSP</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>TSP</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cusers%5Ctoanb%5Cdocuments%5Cskole_programmering%5Cinf4490%5Coblig1%5Ctsp.py">c:\users\toanb\documents\skole_programmering\inf4490\oblig1\tsp.py</a></font></td></tr></table>
+    <p><tt>Author&nbsp;-&nbsp;Torstein&nbsp;Gombos<br>
+Created:&nbsp;06.09.2018<br>
+Solving&nbsp;the&nbsp;travelling&nbsp;salesman&nbsp;problem<br>
+&nbsp;<br>
+The&nbsp;main&nbsp;script&nbsp;in&nbsp;which&nbsp;everything&nbsp;is&nbsp;run&nbsp;from.<br>
+This&nbsp;reads&nbsp;the&nbsp;data&nbsp;from&nbsp;the&nbsp;CSV&nbsp;file&nbsp;and&nbsp;runs&nbsp;the&nbsp;different<br>
+methods&nbsp;according&nbsp;to&nbsp;the&nbsp;arguments&nbsp;given&nbsp;from&nbsp;the&nbsp;user.<br>
+It&nbsp;then&nbsp;returns&nbsp;the&nbsp;results&nbsp;and&nbsp;prints&nbsp;and&nbsp;plots&nbsp;in&nbsp;a&nbsp;manner<br>
+that&nbsp;can&nbsp;answer&nbsp;the&nbsp;questions&nbsp;in&nbsp;&nbsp;the&nbsp;assignment.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="argparse.html">argparse</a><br>
+<a href="csv.html">csv</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+<a href="simple_search_algorithms.html">simple_search_algorithms</a><br>
+</td><td width="25%" valign=top><a href="statistics.html">statistics</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-calculate_average_fitness"><strong>calculate_average_fitness</strong></a>(results)</dt><dd><tt>Calculate&nbsp;average&nbsp;of&nbsp;the&nbsp;best&nbsp;fitness&nbsp;for<br>
+each&nbsp;generation&nbsp;over&nbsp;20&nbsp;runs<br>
+:param&nbsp;results:<br>
+:return:&nbsp;list&nbsp;with&nbsp;average&nbsp;best&nbsp;fitness</tt></dd></dl>
+ <dl><dt><a name="-get_result"><strong>get_result</strong></a>(data, route_idx, travel_distances, algorithm)</dt><dd><tt>Prints&nbsp;result&nbsp;from&nbsp;algorithm<br>
+:param&nbsp;data:&nbsp;Data&nbsp;from&nbsp;CSV<br>
+:param&nbsp;route_idx:&nbsp;The&nbsp;route.&nbsp;Should&nbsp;be&nbsp;index&nbsp;numbers<br>
+:param&nbsp;travel_distances:&nbsp;The&nbsp;total&nbsp;distance&nbsp;of&nbsp;route<br>
+:param&nbsp;algorithm:&nbsp;What&nbsp;algorithm&nbsp;was&nbsp;used<br>
+:return:&nbsp;None</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>This&nbsp;main&nbsp;function&nbsp;simply&nbsp;checks&nbsp;arguments&nbsp;and&nbsp;runs&nbsp;the&nbsp;various<br>
+solutions&nbsp;and&nbsp;print&nbsp;the&nbsp;results&nbsp;according&nbsp;to&nbsp;the&nbsp;questions&nbsp;in&nbsp;the&nbsp;assignment<br>
+:return:</tt></dd></dl>
+ <dl><dt><a name="-parse_arguments"><strong>parse_arguments</strong></a>()</dt><dd><tt>Parse&nbsp;command&nbsp;line&nbsp;arguments</tt></dd></dl>
+ <dl><dt><a name="-plot"><strong>plot</strong></a>(results, population_sizes, size)</dt><dd><tt>Plots&nbsp;result&nbsp;from&nbsp;genetic&nbsp;algorithm&nbsp;and&nbsp;hybrid<br>
+:param&nbsp;results:<br>
+:param&nbsp;population_sizes:<br>
+:param&nbsp;size:<br>
+:return:</tt></dd></dl>
+ <dl><dt><a name="-read_csv"><strong>read_csv</strong></a>(file) -&gt; list</dt><dd><tt>Reads&nbsp;the&nbsp;content&nbsp;of&nbsp;a&nbsp;CSV&nbsp;file&nbsp;and&nbsp;store&nbsp;it&nbsp;to&nbsp;a&nbsp;data&nbsp;variable<br>
+:param&nbsp;file:&nbsp;CSV&nbsp;file<br>
+:return:&nbsp;List&nbsp;of&nbsp;data</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>t0</strong> = 1537213663.4785757<br>
+<strong>t1</strong> = 1537213663.4785757</td></tr></table>
+</body></html>

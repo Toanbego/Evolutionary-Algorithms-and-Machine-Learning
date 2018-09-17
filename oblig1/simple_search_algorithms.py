@@ -8,9 +8,7 @@ Module that contains all the search algorithms used for this assignment
 """
 import random
 import numpy as np
-from oblig1 import routes as r
-import sys
-import statistics
+import routes as r
 
 
 class Population:

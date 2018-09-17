@@ -15,9 +15,7 @@ import csv
 import argparse
 import statistics
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("C:/Users/toanb/Documents/Skole_programmering/INF4490/oblig1")
-from oblig1 import simple_search_algorithms as search
+import simple_search_algorithms as search
 
 
 def parse_arguments():
@@ -275,6 +273,7 @@ def main():
 
 # Time the execution
 t0 = time.time()
-main()
+if __name__ == '__main__':
+    main()
 t1 = time.time()
 print("\nCode execution: {}s".format(t1-t0))
