@@ -174,7 +174,7 @@ class Population:
 
             # Start hill climbing
             # Only perform it a number of iterations. 15 in this case.
-            while num_evaluations < 20:
+            while num_evaluations < 10:
                 move = False
 
                 # Start swapping cities in the route
@@ -213,15 +213,16 @@ class Population:
     def replace_population(self):
         """
         Method that replaces and evaluates new population.
+
         Will do so either with a hybrid mode that executes a local search,
-        or normal GA with no local  search
+        or normal GA with no local search
         :return:
         """
         # Replace and evaluate population
         # Use lamarckian learning model
         if self.hybrid and self.hybrid_type == "lamarckian":  # Perform local search
             self.optimized_offspring = self.local_search(self.offsprings)
-            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Evaluate the offsprings
+            self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # acquire fitness
 
             self.population = self.optimized_offspring  # Replace with optimized offspring
             self.evaluation = self.evaluated_offspring  # Evaluate the new population
@@ -230,6 +231,7 @@ class Population:
         elif self.hybrid and self.hybrid_type == "baldwinian":
             self.optimized_offspring = self.local_search(self.offsprings)  # Perform local search
             self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Acquire fitness
+
             self.population = self.offsprings  # Survivor selection
             self.evaluation = self.evaluated_offspring  # Replace ordinary offspring, keep fitness
 

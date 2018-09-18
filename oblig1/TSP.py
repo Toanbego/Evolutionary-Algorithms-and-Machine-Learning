@@ -139,9 +139,9 @@ def main():
 
     # Population sizes and generations for genetic algorithms
     population_size_ga = [200, 700, 1200]
-    population_size_hybrid = [20, 30, 50]
+    population_size_hybrid = [200, 30, 50]
     generations_ga = 400
-    generations_hybrid = 50
+    generations_hybrid = 100
 
     # Run exhaustive search
     if args.method == "ex":

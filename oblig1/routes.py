@@ -33,11 +33,8 @@ def create_permutation_of_routes(route_length=6) -> list:
     route_starting_point = list(range(route_length))
     random.shuffle(route_starting_point)
     all_routes = list(itertools.permutations(route_starting_point[1:]))
-    # Appends home destination to all permutations
-    i = 0
-    for element in all_routes:
-        i+=1
 
+    # Appends home destination to all permutations
     for n, element in enumerate(all_routes.copy()):
         list_of_routes = list(all_routes[n])
         list_of_routes.insert(0, route_starting_point[0])
