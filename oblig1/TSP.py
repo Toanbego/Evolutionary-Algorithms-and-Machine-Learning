@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import simple_search_algorithms as search
 
 
+
 def parse_arguments():
     """
     Parse command line arguments
@@ -138,9 +139,9 @@ def main():
     args = parse_arguments()
 
     # Population sizes and generations for genetic algorithms
-    population_size_ga = [200, 700, 1200]
-    population_size_hybrid = [200, 30, 50]
-    generations_ga = 400
+    population_size_ga = [500, 700, 1200]
+    population_size_hybrid = [100, 30, 50]
+    generations_ga = 500
     generations_hybrid = 100
 
     # Run exhaustive search
@@ -233,7 +234,7 @@ def main():
 
             # Run Hybrid 20 times
             print("\nPerforming with ", size)
-            for i in range(20):
+            for i in range(1):
                 print("Run {} with {}".format(i, size))
                 # Perform hybrid genetic algorithm
                 # Pardon the long line of code. A lot is returned and a lot is parsed

@@ -268,11 +268,10 @@ def genetic_algorithm(data, route_length=24,
     best_fitness = []  # List that will contain the best fitness of each generation
     # Start evolving over generations
     for generation in range(generations):
-
         best_fitness.append(100000-max(routes.evaluation))
+
         # Evolve population
         routes.evolve()  # Initiates evolve method in Population class
-
     final_fitness = best_fitness[-1]
     return best_fitness, final_fitness, routes.population, routes.evaluation
 

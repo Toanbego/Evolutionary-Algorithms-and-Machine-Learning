@@ -21,6 +21,6 @@ $RECYCLE.BIN/
 # =========================
 # Operating System Files
 # =========================
-.idea/workspace.xml
-.idea/workspace.xml
+**figures/
+**.idea/
 **__pycache__
