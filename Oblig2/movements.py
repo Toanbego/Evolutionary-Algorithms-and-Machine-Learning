@@ -10,7 +10,7 @@ import numpy as np
 import mlp
 
 # Read data
-filename = 'data/movements_day1-3.dat'
+filename = 'data/movements_day1.dat'
 movements = np.loadtxt(filename, delimiter='\t')
 
 # Subtract arithmetic mean for each sensor. We only care about how it varies:
