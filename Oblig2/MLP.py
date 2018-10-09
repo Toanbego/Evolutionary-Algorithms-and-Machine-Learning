@@ -20,7 +20,7 @@ class mlp:
         """
         # Initiate hyperparamters
         self.beta = 1
-        self.eta = 0.01  # Learning rate
+        self.eta = 0.1  # Learning rate
         self.momentum = 0.0  # To push out of local optimum/minimum
         self.bias = -1  # Input for the bias node
         self.inputs = inputs  # Make an attribute of the input data
@@ -30,7 +30,7 @@ class mlp:
 
         # Initiate weights
         self.weights_input = self.initialize_weights(len(self.inputs[0, :])+1, hidden+1)
-        self.weights_output = self.initialize_weights(hidden+1, self.output)  # Number of outputs
+        self.weights_output = self.initialize_weights(hidden+1, self.output)
 
         # Attributes are initiated in methods
         self.error_validation = []
@@ -83,7 +83,6 @@ class mlp:
             # Perform a validation check.
             for input_vector, output_vector in zip(valid, validtargets):
 
-
                 # Move forward
                 prediction = self.forward(input_vector)
                 error.append(self.sum_of_squares_error(output_vector, prediction))
@@ -107,11 +106,11 @@ class mlp:
 
                 # Check current error against the average of the last 20 or if converging
 
-                if self.error_validation[-1] > statistics.mean(self.error_validation[-20:]):
+                if self.error_validation[-1] > statistics.mean(self.error_validation[-15:]):
                     overfitting += 1
 
                 # Time to stop if if was worse 10 times or same 100 times.
-                if overfitting == 25:
+                if overfitting == 35:
                     print("Earlystop activated. Evaluating testset...")
                     break
 
@@ -127,11 +126,8 @@ class mlp:
                 result = correct / (not_correct + correct)
                 print("epoch {}: Error: {}, Accuracy: {}"
                       .format(epoch, self.error_validation[-1], result))
-        plt.show()
 
-
-
-    def train(self, inputs, targets, iterations=10000):
+    def train(self, inputs, targets):
         """
         Trains the network with a backproporgation algorithm. First goes forward, then
         trains by calculating the error backwards.
@@ -312,16 +308,10 @@ class mlp:
             else:
                 confusion[target_index][prediction_index] += 1
 
-        # Print the matrix
-        for c in confusion:
-            print(c)
-
-        # Print the accuracy
+        # Print the accuracy and confusion matrix
+        print("\nConfusion matrix:")
+        print(confusion)
         result = np.trace(confusion)/np.sum(confusion)
-        print(result)
-
-
-
-
+        print("Test accuracy: {}%".format(round(result*100, 3)))
 
 

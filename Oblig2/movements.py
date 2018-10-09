@@ -1,8 +1,8 @@
 #!/usr/bin/env Python3
 '''
-    This file will read in data and start your mlp network.
-    You can leave this file mostly untouched and do your
-    mlp implementation in mlp.py.
+This file will read in data and start your mlp network.
+You can leave this file mostly untouched and do your
+mlp implementation in mlp.py.
 '''
 
 # Feel free to use numpy in your MLP if you like to.
