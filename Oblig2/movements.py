@@ -56,13 +56,7 @@ hidden = 12
 # Initialize the network:
 net = mlp.mlp(train, train_targets, hidden)
 
-# Run training:
-net.train(train, train_targets)
-
 net.earlystopping(train, train_targets, valid, valid_targets)
-# NOTE: You can also call train method from here,
-#       and make train use earlystopping method.
-#       This is a matter of preference.
 
 # Check how well the network performed:
 net.confusion(test, test_targets)
