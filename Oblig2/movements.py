@@ -34,6 +34,7 @@ for x in range(1, 9):
 order = list(range(np.shape(movements)[0]))
 np.random.shuffle(order)
 movements = movements[order, :]
+
 target = target[order, :]
 
 # Split data into 3 sets
@@ -56,7 +57,11 @@ hidden = 12
 # Initialize the network:
 net = mlp.mlp(train, train_targets, hidden)
 
-net.earlystopping(train, train_targets, valid, valid_targets)
 
+# Trains a net with earlystopping activation
+net.earlystopping(train, train_targets, valid, valid_targets, plot=True)
 # Check how well the network performed:
 net.confusion(test, test_targets)
+
+# Uses k-fold cross validation.
+# net.k_fold_cross_vaildation(movements[:-7, 0:40], target[:-7])

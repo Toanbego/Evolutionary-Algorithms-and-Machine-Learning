@@ -20,7 +20,7 @@ class mlp:
         """
         # Initiate hyperparamters
         self.beta = 1
-        self.eta = 0.1  # Learning rate
+        self.eta = 0.01  # Learning rate
         self.momentum = 0.0  # To push out of local optimum/minimum
         self.bias = -1  # Input for the bias node
         self.inputs = inputs  # Make an attribute of the input data
@@ -54,7 +54,90 @@ class mlp:
 
         return weights
 
-    def earlystopping(self, inputs, targets, valid, validtargets):
+    def k_fold_cross_vaildation(self, inputs, targets, k=8):
+        """
+        Trains a model on k number of groups  from the dataset.
+        splits the data set into k-1 training sets and 1 test set,
+        which will evaluate the efficiency of the model.
+
+        :param inputs: Dataset
+        :param targets: Labels
+        :param valid: Dataset for validation
+        :param validtargets: Label for validation set
+        :param k: Number of folds
+        :return:
+        """
+
+        # Set up accuracy and confusion lists
+        accuracy, confusion = [], []
+
+        # Raises an error if the chosen k does not make an equal set of groups.
+        if len(inputs) % k != 0:
+            raise ValueError("The k is not equally divided by the length of the dataset. Choose another k.")
+
+        # Split the data into k equally large groups.
+        self.data_groups = np.split(inputs, k)
+        self.label_groups = np.split(targets, k)
+
+        # Train k times
+        for i in range(k):
+
+            # Initiate data attributes. Must be reset each time
+            self.training_set = []
+            self.training_set_target = []
+            self.test_set = []
+            self.test_set_target = []
+            self.validation_set = []
+            self.validation_set_target = []
+
+            # Set up training, validation and test
+            for data, labels in zip(self.data_groups[:-2], self.label_groups[:-2]):
+                self.training_set.append(data)
+                self.training_set_target.append(labels)
+
+            self.training_set = np.concatenate(self.training_set)
+            self.training_set_target = np.concatenate(self.training_set_target)
+
+            self.validation_set = self.data_groups[-1]
+            self.validation_set_target = self.label_groups[-1]
+
+            self.test_set = self.data_groups[-2]
+            self.test_set_target = self.label_groups[-2]
+
+            # Rotate group k times
+            self.data_groups = self.rotate(self.data_groups)
+            self.label_groups = self.rotate(self.label_groups)
+
+            # Initialize new weights
+            self.weights_input = self.initialize_weights(len(self.inputs[0, :]) + 1, self.hidden + 1)
+            self.weights_output = self.initialize_weights(self.hidden + 1, self.output)
+
+            # Start training on current set
+            self.earlystopping(self.training_set, self.training_set_target,
+                               self.validation_set, self.validation_set_target)
+
+
+            conf, acc = self.confusion(self.test_set, self.test_set_target)
+            confusion.append(conf)
+            accuracy.append(acc)
+
+        # Print results
+        print("The accuracy mean: ", statistics.mean(accuracy))
+        print("The accuracy std:  ", statistics.stdev(accuracy))
+        print("The best accuracy: ", max(accuracy))
+
+
+    def rotate(self, list, rotations=1):
+        """
+        Rotates the list
+        :param list:
+        :param rotations:
+        :return:
+        """
+        return list[rotations:] + list[:rotations]
+
+
+    def earlystopping(self, inputs, targets, valid, validtargets, plot = False):
         """
         Early stopping method that check validation error versos training error.
         Will stop the training if the validation error increases compared to the
@@ -70,11 +153,19 @@ class mlp:
         epoch = 0  # Epoch counter
         overfitting = 0  # Earlystop counter if overfitting
 
-        plt.plot(epoch_plot, self.error_validation, color='red', label='Validation error')
-        plt.plot(epoch_plot, self.error_validation, color='blue', label='Training error')
-        plt.legend()
+        # Reset every time in case k-fold is used
+        self.error_validation = []
+        self.error_training = []
+        self.a = None
+        self.h = None
+        self.h_ = None
 
-        # Start training
+        if plot == True:
+            plt.plot(epoch_plot, self.error_validation, color='red', label='Validation error')
+            plt.plot(epoch_plot, self.error_validation, color='blue', label='Training error')
+            plt.legend()
+
+        # Continue training until earlystop is activated
         while True:
             correct = 0
             not_correct = 0
@@ -106,7 +197,7 @@ class mlp:
 
                 # Check current error against the average of the last 20 or if converging
 
-                if self.error_validation[-1] > statistics.mean(self.error_validation[-15:]):
+                if self.error_validation[-1] > statistics.mean(self.error_validation[-20:]):
                     overfitting += 1
 
                 # Time to stop if if was worse 10 times or same 100 times.
@@ -117,15 +208,19 @@ class mlp:
             # Plot the error rates
             epoch_plot.append(epoch)
             epoch += 1
-            plt.plot(epoch_plot, self.error_validation, color='red', label='Validation error')
-            plt.plot(epoch_plot, self.error_training, color='blue', label='Training error')
-            plt.pause(1/10**10)
+
+            if plot == True:
+                plt.plot(epoch_plot, self.error_validation, color='red', label='Validation error')
+                plt.plot(epoch_plot, self.error_training, color='blue', label='Training error')
+                plt.pause(1/10**10)
+
 
             # Print results
             if epoch % 10 == 0:
                 result = correct / (not_correct + correct)
                 print("epoch {}: Error: {}, Accuracy: {}"
                       .format(epoch, self.error_validation[-1], result))
+        plt.savefig("{}nodes.png".format(self.hidden))
 
     def train(self, inputs, targets):
         """
@@ -208,9 +303,8 @@ class mlp:
 
         # From hidden layer to output.
         h_ = self.weighted_sum(self.a, self.weights_output, self.output)
-        self.h_ = h_[:-1]  # A bias is added in self.Weighted_sum which we dont want.
 
-        return self.h_
+        return h_[:-1]
 
     def sigmoid_activation(self, h):
         """
@@ -256,8 +350,8 @@ class mlp:
 
     def sum_of_squares_error(self, target, y):
         """
-        Sum of Squared Error function
-        Takes the squared error
+        Calculates the squared sum of the error.
+
         :param target:
         :param y:
         :return:
@@ -285,9 +379,9 @@ class mlp:
     def confusion(self, inputs, targets):
         """
         Runs through a test set and creates a confusion matrix
-        :param inputs:
-        :param targets:
-        :return:
+        :param inputs: Test set
+        :param targets: Labels
+        :return: confusion matrix and accuracy
         """
 
         # initiate matrix
@@ -303,15 +397,14 @@ class mlp:
             target_index = np.argmax(output_vector)
 
             # Add results to confusion matrix
-            if prediction_index == target_index:
-                confusion[prediction_index][prediction_index] += 1
-            else:
-                confusion[target_index][prediction_index] += 1
+
+            confusion[target_index][prediction_index] += 1
 
         # Print the accuracy and confusion matrix
         print("\nConfusion matrix:")
         print(confusion)
         result = np.trace(confusion)/np.sum(confusion)
         print("Test accuracy: {}%".format(round(result*100, 3)))
+        return confusion, result
 
 
