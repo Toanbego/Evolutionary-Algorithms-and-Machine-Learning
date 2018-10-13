@@ -9,14 +9,13 @@ import matplotlib.pyplot as plt
 import statistics
 
 
-
 class mlp:
     def __init__(self, inputs, targets, hidden):
         """
         Initialize the class attributes
-        :param inputs:
-        :param targets:
-        :param hidden:
+        :param inputs: Input data
+        :param targets: Target data
+        :param hidden: Number of hidden nodes in the layer
         """
         # Initiate hyperparamters
         self.beta = 1
@@ -44,7 +43,6 @@ class mlp:
         Initialize weights. Will add a bias node weights for the output and hidden layer.
         :param output: Number of outputs
         :param n: Number of inputs
-
         :return:
         """
         # Initiate weights randomly distributed between the low-high interval
@@ -68,7 +66,7 @@ class mlp:
         :return:
         """
 
-        # Set up accuracy and confusion lists
+        # Set up accuracy and confusion lists for all the folds
         accuracy, confusion = [], []
 
         # Raises an error if the chosen k does not make an equal set of groups.
@@ -94,13 +92,10 @@ class mlp:
             for data, labels in zip(self.data_groups[:-2], self.label_groups[:-2]):
                 self.training_set.append(data)
                 self.training_set_target.append(labels)
-
             self.training_set = np.concatenate(self.training_set)
             self.training_set_target = np.concatenate(self.training_set_target)
-
             self.validation_set = self.data_groups[-1]
             self.validation_set_target = self.label_groups[-1]
-
             self.test_set = self.data_groups[-2]
             self.test_set_target = self.label_groups[-2]
 
@@ -126,16 +121,14 @@ class mlp:
         print("The accuracy std:  ", statistics.stdev(accuracy))
         print("The best accuracy: ", max(accuracy))
 
-
     def rotate(self, list, rotations=1):
         """
-        Rotates the list
-        :param list:
-        :param rotations:
+        Rotates the group of data
+        :param list: Data groups
+        :param rotations: Number of rotations
         :return:
         """
         return list[rotations:] + list[:rotations]
-
 
     def earlystopping(self, inputs, targets, valid, validtargets, plot = False):
         """
@@ -160,7 +153,8 @@ class mlp:
         self.h = None
         self.h_ = None
 
-        if plot == True:
+        # Sets up the axis for live plotting
+        if plot:
             plt.plot(epoch_plot, self.error_validation, color='red', label='Validation error')
             plt.plot(epoch_plot, self.error_validation, color='blue', label='Training error')
             plt.legend()
@@ -192,35 +186,36 @@ class mlp:
             # Take the mean of the error from the validation
             self.error_validation.append(statistics.mean(error))
 
-            # Do some training, then check if there is time to stop
+            # Check if there is time to stop.
             if epoch > 10:
 
                 # Check current error against the average of the last 20 or if converging
-
                 if self.error_validation[-1] > statistics.mean(self.error_validation[-20:]):
                     overfitting += 1
 
                 # Time to stop if if was worse 10 times or same 100 times.
-                if overfitting == 35:
+                if overfitting == 50:
                     print("Earlystop activated. Evaluating testset...")
                     break
 
-            # Plot the error rates
             epoch_plot.append(epoch)
             epoch += 1
 
-            if plot == True:
+            # Plot the error rates
+            if plot:
                 plt.plot(epoch_plot, self.error_validation, color='red', label='Validation error')
                 plt.plot(epoch_plot, self.error_training, color='blue', label='Training error')
                 plt.pause(1/10**10)
-
 
             # Print results
             if epoch % 10 == 0:
                 result = correct / (not_correct + correct)
                 print("epoch {}: Error: {}, Accuracy: {}"
                       .format(epoch, self.error_validation[-1], result))
-        plt.savefig("{}nodes.png".format(self.hidden))
+
+        if plot:
+            # Save the figure
+            plt.savefig("{}nodes.png".format(self.hidden))
 
     def train(self, inputs, targets):
         """
@@ -313,7 +308,6 @@ class mlp:
         :return: Activation result
         """
         return [1/(1+math.exp(-self.beta*node)) for node in h]
-
 
     def compute_delta_output(self, target, y):
         """

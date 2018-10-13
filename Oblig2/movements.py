@@ -64,4 +64,4 @@ net.earlystopping(train, train_targets, valid, valid_targets, plot=True)
 net.confusion(test, test_targets)
 
 # Uses k-fold cross validation.
-# net.k_fold_cross_vaildation(movements[:-7, 0:40], target[:-7])
+# net.k_fold_cross_vaildation(movements[:-7, 0:40], target[:-7], k=10)
