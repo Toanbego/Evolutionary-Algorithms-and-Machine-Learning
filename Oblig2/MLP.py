@@ -111,7 +111,6 @@ class mlp:
             self.earlystopping(self.training_set, self.training_set_target,
                                self.validation_set, self.validation_set_target)
 
-
             conf, acc = self.confusion(self.test_set, self.test_set_target)
             confusion.append(conf)
             accuracy.append(acc)

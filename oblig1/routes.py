@@ -51,13 +51,15 @@ def create_random_route(route_length=10, seed=random.random()):
     :return:
     """
     # Generate a random route sequence.
-    random.seed(seed)
+    random.seed(seed)  # Use same seed so start city always is the same
     random_route = random.sample(range(route_length), route_length)  # Generate random route
+
+    # Shuffle everything except the first city
     shuffle_inside = random_route[1:]
     random.seed()
     random.shuffle(shuffle_inside)
     random_route[1:] = shuffle_inside
-    random_route.append(random_route[0])  # Add home travel
+    random_route.append(random_route[0])  # Add end destination
     return random_route
 
 

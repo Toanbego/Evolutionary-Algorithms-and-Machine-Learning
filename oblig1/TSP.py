@@ -24,16 +24,16 @@ def parse_arguments():
     Parse command line arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--method', '-m', type=str, default='ex',
+    parser.add_argument('--method', '-m', type=str, default='ex', metavar=' ',
                         help='Pick a method for solving travelling salesman problem:\n'
-                             'Current methods available\n:'
+                             'Current methods available:\n\n'
                              ' -m ex    -   Exhaustive search\n'
-                             ' -m hc    -   Hill climber search'
-                             ' -m ga    -   Genetic Algorithm'
+                             ' -m hc    -   Hill climber search\n'
+                             ' -m ga    -   Genetic Algorithm\n'
                              ' -m hybrid    -   Hybrid algorithm')
-    parser.add_argument('--route_length', '-r', type=int, default=10,
+    parser.add_argument('--route_length', '-r', type=int, default=10, metavar=' ',
                         help='Choose length of route.')
-    parser.add_argument("--learning_model", "-l", type=str, default="lamarck",
+    parser.add_argument("--learning_model", "-l", type=str, default="lamarck", metavar='    ',
                         help='Choose either lamarckian or baldwinian learning method'
                              'Only usable for hybrid method')
 

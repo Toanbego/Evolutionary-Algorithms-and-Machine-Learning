@@ -131,6 +131,7 @@ class Population:
                     start, stop = min(start_stop), max(start_stop)
                     sub_segment1, sub_segment2 = parent1[start:stop], parent2[start:stop]
                 elif n == 1:
+                    # Parents are switched to create second offspring
                     parent2, parent1 = self.parents[i+1], self.parents[i]
                     sub_segment1, sub_segment2 = parent2[start:stop], parent1[start:stop]
                 offspring = [None] * (len(self.parents[i]))
@@ -196,6 +197,8 @@ class Population:
     def mutate_population(self, population, mutation_prob=1/24):
         """
         A probability that an individual will mutate with a swap permutation
+        Takes in an arbitrary population so that mutation can be applied to both
+        parent or offspring if desired.
         :return:
         """
         offspring = []
@@ -204,6 +207,7 @@ class Population:
                 seq_idx = list(range(len(individual)))
                 a1, a2 = random.sample(seq_idx[1:-1], 2)
                 individual[a1], individual[a2] = individual[a2], individual[a1]
+
                 # Updates offspring
                 offspring.append(individual)
             else:
@@ -227,7 +231,7 @@ class Population:
             self.population = self.optimized_offspring  # Replace with optimized offspring
             self.evaluation = self.evaluated_offspring  # Evaluate the new population
 
-        # Use baldwinian learning model
+        # Use Baldwinian learning model
         elif self.hybrid and self.hybrid_type == "baldwinian":
             self.optimized_offspring = self.local_search(self.offsprings)  # Perform local search
             self.evaluated_offspring = self.evaluate_population(self.optimized_offspring)  # Acquire fitness
@@ -259,7 +263,7 @@ def genetic_algorithm(data, route_length=24,
     """
     # Create routes
     # Used to create random starting tour
-    seed_for_pop = random.random()
+    seed_for_pop = random.random() # Use same seed to initiate the population
     routes = [r.create_random_route(route_length, seed_for_pop) for route in range(pop_size)]
 
     # Initiate class
